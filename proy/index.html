@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta http-equiv="Expires" content="0">
+
+  <meta http-equiv="Last-Modified" content="0">
+
+  <meta http-equiv="Cache-Control" content="no-cache, mustrevalidate">
+
+  <meta http-equiv="Pragma" content="no-cache">
+
+
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+
+
+  <script src="./src/Abstracta/nodo.js"></script>
+
+  <script src="./src/otrasClases/import.js"></script>
+  <script src="./src/decasign/declaracion.js"></script>
+  <script src="./src/Instrucciones/Instrucciones.js"></script>
+  <script src="./src/LID/lid.js"></script>
+  <script src="./src/exp/expresiones.js"></script>
+  <script src="./src/control/condicionales.js"></script>
+  <script src="./src/control/transferencia.js"></script>
+  <script src="./src/control/ciclos.js"></script>
+
+
+  <script src="./src/gramaticas/jsharp.js"></script>
+
+
+
+
+  <title>Compi 2</title>
+
+
+  <!-- Bootstrap core CSS -->
+  <link href="./bootstrap-4.4.1-dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="./bootstrap-4.4.1-dist/js/jquery-3.4.1.js"></script>
+
+  <link rel=stylesheet href="lib/codemirror.css">
+  <link rel=stylesheet href="doc/docs.css">
+  <script src="lib/codemirror.js"></script>
+
+  <script src="addon/edit/matchbrackets.js"></script>
+
+
+  <style>
+    .CodeMirror {
+      height: auto;
+      border: 1px solid #ddd;
+    }
+
+    .CodeMirror-scroll {
+      max-height: 200px;
+    }
+
+    .CodeMirror pre {
+      padding-left: 7px;
+      line-height: 1.25;
+    }
+
+    .banner {
+      background: #ffc;
+      padding: 6px;
+      border-bottom: 2px solid silver;
+    }
+
+    .banner div {
+      margin: 0 auto;
+      max-width: 700px;
+      text-align: center;
+    }
+  </style>
+
+  <style>
+    .node circle {
+      stroke: lightblue;
+      stroke-width: 3px;
+    }
+
+
+    .link {
+      fill: none;
+      stroke: lightgreen;
+      stroke-width: 2px;
+    }
+  </style>
+
+
+
+  <!-- Custom styles for this template -->
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <a class="navbar-brand" href="#">Compi Estudio</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+      aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">Dropdown</a>
+          <div class="dropdown-menu" aria-labelledby="dropdown01">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <a class="dropdown-item" href="#">Something else here</a>
+          </div>
+        </li>
+      </ul>
+
+    </div>
+  </nav>
+
+
+
+  <main role="main">
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <br />
+    <br />
+    <br />
+
+    <div class="container">
+      <h1 style="text-align: center;">Compi Estudio</h1>
+      <h2 style="text-align: center;">J#</h2>
+
+      <ul class="nav nav-tabs" id="ulpest" role="tablist">
+        <li class="nav-item" id="li1">
+          <a class="nav-link active" data-toggle="tab" href="#t1" role="tab" aria-selected="true"
+            onclick="pestaniaactual(1)">t1</a>
+        </li>
+
+      </ul>
+      <div class="tab-content" id="divpest">
+
+        <div class="tab-pane fade show active" id="t1" role="tabpanel">
+          <textarea class="form-control" id="tarea1" rows="10"></textarea>
+        </div>
+
+      </div>
+
+
+
+
+    </div> <!-- /container -->
+
+    <br />
+    <div class="container">
+      <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-info" onmousedown="nPestania()">Nueva pestaña</button>
+        <button type="button" class="btn btn-warning" onclick="eliminarpestania()">Cerrar pestaña</button>
+
+
+        <button type="button" class="btn btn-success" onclick="traducir()">Traducir</button>
+        <button type="button" class="btn btn-info" onclick="dibujar()">Dibujar AST</button>
+      </div>
+    </div>
+
+    <br />
+
+    <div class="container">
+      <div id="fwidth" width="100%">
+        <br /> </div>
+
+
+      <nav>
+        <div class="nav nav-tabs" id="consMenu" role="tablist">
+          <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab"
+            aria-controls="nav-home" aria-selected="true">Consola</a>
+          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#showast" role="tab"
+            aria-controls="nav-profile" aria-selected="false">AST</a>
+          <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab"
+            aria-controls="nav-contact" aria-selected="false">3D</a>
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+          <textarea class="form-control" id="consola" rows="10"></textarea>
+        </div>
+        <div class="tab-pane fade" id="showast" role="tabpanel" aria-labelledby="nav-profile-tab">
+
+          <div id="gast" style="border-color: lightblue; border-style:double;   overflow: auto;">
+
+          </div>
+
+        </div>
+        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">...</div>
+      </div>
+
+
+
+    </div> <!-- /container -->
+
+    <br />
+  </main>
+
+  <footer class="container">
+    <p>&copy; Compi Estudio 2020</p>
+  </footer>
+
+
+  <script>
+
+    var ulpest = document.getElementById("ulpest");
+    var divpest = document.getElementById("divpest");
+    var t2 = document.getElementById("t2");
+    var li2 = document.getElementById("li2");
+    var altura = 6;
+
+    var treeData =
+    {
+      "name": "J#",
+      "children": [
+        {
+          "name": "asignacion",
+          "children": [
+            {
+              "name": "A",
+            },
+            { "name": "=" },
+            {
+              "name": "+",
+              "children": [
+                { "name": "2" },
+                {
+                  "name": "+",
+                  "children": [
+                    { "name": "2" },
+                    {
+                      "name": "+",
+                      "children": [
+                        { "name": "2" },
+                        { "name": "2" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    var ctab = 1;
+    var tabs = [];
+    var tabs2 = [];
+
+    var mirrorTab = {};
+    var cmayor = 1;
+    var pactual = 1;
+
+    tabs.push(1);
+    tabs2.push(1);
+
+    function pestaniaactual(n) {
+      pactual = n;
+      console.log(pactual);
+    }
+
+    function eliminarpestania() {
+      if (pactual == null) {
+        alert("No estas en ninguna pestaña.");
+        return;
+      }
+      var liel = document.getElementById("li" + pactual);
+      var divel = document.getElementById("t" + pactual);
+
+      var n = tabs.indexOf(pactual);
+      if (n != -1) {
+        if (n == 0) {
+          tabs.shift();
+        } else if (n == tabs.length - 1) {
+          tabs.pop();
+        } else {
+          tabs.splice(n, n);
+        }
+      }
+
+
+      delete mirrorTab["tarea" + n];
+
+      n = tabs2.indexOf(pactual);
+      if (n == 0) {
+        tabs2.shift();
+      } else if (n == tabs2.length - 1) {
+        tabs2.pop();
+      } else {
+        tabs2.splice(n, n);
+      }
+
+
+      pactual = null;
+
+      divpest.removeChild(divel);
+      ulpest.removeChild(liel);
+      ctab--;
+
+      if (ctab != 0) {
+        pactual = tabs2[0];
+        $('#ulpest a:first').tab('show');
+      }
+
+      console.log(tabs2);
+      console.log(pactual);
+    }
+
+    function nPestania() {
+
+      //divpest.insertAdjacentHTML('beforeend', "jeje");
+
+      //ulpest.insertAdjacentHTML('beforeend', "jojo");
+
+      var liactive = "";
+      var divsact = "";
+      var aria_select = 'aria-selected="false"';
+      if (ctab == 0) {
+        aria_select = 'aria-selected="true"';
+        liactive = " active";
+        divsact = " show active";
+      }
+
+      cmayor++;
+      console.log(cmayor);
+      var strli = '<li class="nav-item" id="li' + cmayor + '">' +
+        '<a class="nav-link ' + liactive + '"  data-toggle="tab" href="#t' + cmayor + '" role="tab" ' + aria_select +
+        ' onclick="pestaniaactual(' + cmayor + ')" >t' + cmayor + '</a>' +
+        '</li>';
+      ulpest.insertAdjacentHTML('beforeend', strli);
+
+      var strdiv = '<div class="tab-pane fade ' + divsact + '" id="t' + cmayor + '" role="tabpanel">' +
+        '<textarea onclick="agregarcosas()"  class="form-control" id="tarea' + cmayor + '" rows="1"></textarea>' +
+        ' </div>';
+      divpest.insertAdjacentHTML('beforeend', strdiv);
+      ctab++;
+
+      tabs2.push(cmayor);
+      $('#ulpest a[href="#t' + cmayor + '"]').tab('show');
+      pactual = cmayor;
+    }
+
+    function agregarcosas() {
+      var n = pactual;
+      if (tabs.indexOf(n) == -1) {
+        addcodemirror(n);
+        tabs.push(n);
+      }
+    }
+
+    function addcodemirror(n) {
+      mirrorTab["tarea" + n] = CodeMirror.fromTextArea(document.getElementById("tarea" + n), {
+        lineNumbers: true,
+      });
+    }
+
+    var raiz = "F";
+    function parse(input) {
+      raiz = jsharp.parse(input);
+      return raiz;
+    }
+
+    function traducir() {
+
+      if (pactual == null) {
+        alert("No estas en ninguna pestaña.");
+        return;
+      }
+      agregarcosas();
+
+      if (mirrorTab["tarea" + pactual]) {
+        var texto = mirrorTab["tarea" + pactual].getValue();
+        print(texto);
+
+        parse(texto);
+      }
+
+
+
+    }
+
+    mirrorTab.tarea1 = (CodeMirror.fromTextArea(document.getElementById("tarea1"), {
+      lineNumbers: true,
+    }));
+
+    var consola = CodeMirror.fromTextArea(document.getElementById("consola"), {
+      lineNumbers: true,
+    });
+
+    function print(st) {
+      console.log(st);
+    }
+
+
+    function dibujar() {
+
+
+      if (raiz == "F") {
+        return;
+      }
+
+
+
+
+      var dib = {};
+      dib.name = "J#";
+      dib.children = [];
+
+      var cont = new Cont();
+
+      for (var a = 0; a < raiz.length; a++) {
+        dib.children.push(raiz[a].dibujar(cont));
+      }
+      root = dib;
+
+      $('#consMenu a[href="#showast"]').tab('show');
+
+      altura = cont.mayor;
+
+      print("Hojas: " + cont.hojas);
+
+      if (cont.hojas * 70 > width) {
+        width = cont.hojas * 70;
+      }
+
+      if (cont.hojas * 70 < auxwidth) {
+        width = auxwidth;
+      }
+
+      height = altura * tam + 25;
+
+      if (height + 10 > 530) {
+        $("#gast").height(530);
+      } else {
+        $("#gast").height(height + 10);
+      }
+      $("#gast").children().height(height);
+      $("#gast").children().width(width);
+
+      tree = d3.layout.tree()
+        .size([width, height]);
+
+      update(root);
+
+    }
+
+
+
+    var imp = new Importar(1, 1);
+
+
+  </script>
+
+  <script src="./bootstrap-4.4.1-dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-6khuMg9gaYr5AxOqhkVIODVIvm9ynTT5J4V1cfthmT+emCG6yVmEZsRHdxlotUnm"
+    crossorigin="anonymous"></script>
+
+  <script src="./src/ast/genast.js"></script>
+</body>
+
+</html>

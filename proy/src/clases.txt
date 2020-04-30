@@ -1,0 +1,51 @@
+Todo esta dentro de src 
+Los enum se llaman vnombre 
+y su texto esta en v_nombre 
+
+
+Abstracta
+    nodo.js
+        clases
+            nodo
+            cont
+ast
+    genast.js
+        no tiene clases pero es la que genera el ast. 
+decasign 
+    declaracion.js
+        enum 
+            vtipo
+            vddi declaracion dos puntos igual :D jaja 
+        clases
+            Declaracion 
+            Dect2_4
+            decfunc
+exp 
+    expresiones.js
+        enum 
+            voperando 
+            vprim 
+        clases 
+            expresion_binaria
+            expresionUnaria 
+            inc_dec
+            primitivo 
+Gramaticas 
+    jsharp.jison 
+    jsharp.js (sepa que tiena adentro)
+
+Instrucciones
+    instrucciones.js
+        Clase instrucciones
+Lid 
+    lid.js 
+        ListaID
+        Param
+
+control
+    ciclos.js
+
+    condicionales.js
+        if
+        swtich
+    

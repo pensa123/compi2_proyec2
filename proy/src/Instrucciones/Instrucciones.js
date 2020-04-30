@@ -1,0 +1,3 @@
+class Instrucciones extends Nodo{
+    
+}
