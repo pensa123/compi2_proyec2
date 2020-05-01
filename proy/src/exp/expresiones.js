@@ -110,3 +110,15 @@ class primitivo extends Nodo {
         return nodo;
     }
 }
+
+class llamadaFunc extends Nodo{
+    soy(){
+        return "LlamadaFunc [" + this.id+"]"; 
+    }
+}
+
+class SParam extends Nodo{
+    soy(){
+        return "Param " + (this.ref ? "R" : "V "); 
+    }
+}

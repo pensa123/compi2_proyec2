@@ -13,7 +13,7 @@
 "//".*										// comentario simple línea
 [/][*][^*]*[*]+([^/*][^*]*[*]+)*[/]			// comentario multiple líneas
 
-"null"			return 'RNULL';
+<INITIAL>"null"			return 'RNULL';
 "import"		return 'RIMPORT';
 
 "false"			return 'RFALSE';
@@ -46,7 +46,7 @@
 "public"	    return 'RPUBLIC';
 "while"			return 'RWHILE';
 "do"			return 'RDO'; 
-"boolean"			return 'RBOOLEAN'; 
+"boolean"		return 'RBOOLEAN'; 
 
 
 
@@ -64,8 +64,9 @@
 "||"				return 'OR';
 
 
-"++"					return 'MASMAS';
-"--"					return 'MENOSMENOS';
+"$"				return 'DOLAR';
+"++"				return 'MASMAS';
+"--"				return 'MENOSMENOS';
 
 "+"					return 'MAS';
 "-"					return 'MENOS';
@@ -94,6 +95,8 @@
 [0-9]+("."[0-9]+)\b   	    return 'DECIMAL';
 [0-9]+\b				return 'ENTERO';
 
+
+([a-zA-Z0-9_.-])+(."j") return "ARCHIVO";
 ([a-zA-Z])[a-zA-Z0-9_]*	return 'IDENTIFICADOR';
 
 
@@ -151,6 +154,7 @@ instrucciones_cuerpo : instrucciones_cuerpo instruccion_c {  $1.hijos.push($2); 
 instruccion_c :  declaracion fin		  { $$ = $1; } 
 		| visibilidad declararfuncion { $$ = $2; }
 		| declararfuncion { $$ = $1; }
+		| defest {$$ = $1; }
 		; 
 
 declararfuncion : tipo IDENTIFICADOR APAR params CPAR ALLAVE instrucciones_fun CLLAVE
@@ -187,13 +191,53 @@ instrucciones_fun : instrucciones_fun instrucciones_f {$1.hijos.push($2); $$ = $
 					|{$$ = new Instrucciones(this._$.first_line,this._$.first_column); } ; 
 
 instrucciones_f :  declaracion fin {$$ = $1; } 
-				|  si {$$ = $1; }
+				| defest {$$ = $1; }
+				| si {$$ = $1; }
 				| switch {$$ = $1; }
 				| transferencia {$$ = $1; }
 				| cases {$$ = $1; }
 				| asignacion{$$ = $1; } 
 				| ciclos {$$ = $1}
+				| llamadaMetodo fin {$$ = $1; }
+				| fprint {$$ = $1}
 ;
+
+
+defest : RDEFINE IDENTIFICADOR RAS ACORCH  listaest   CCORCH fin 
+	{
+		$$ = new estructura(this._$.first_line,this._$.first_column);
+		$$.hijos= ($5); 
+		$$.id = $2; 
+	}; 
+
+listaest : listaest COMA aest {$1.push($3); $$ = $1; }
+		|  aest { $$ = [$1];  } ; 
+
+aest : 	  tipo IDENTIFICADOR { $$ = new atributoEst(this._$.first_line,this._$.first_column); $$.id = $2; $$.tipo = $1;  }
+		| tipo IDENTIFICADOR IGUAL exp {
+			$$ = new atributoEst(this._$.first_line,this._$.first_column); $$.id = $2; $$.tipo = $1; $$.hijos.push($4); 
+		 }; 
+
+fprint : RPRINT APAR exp CPAR { $$ = new Print(this._$.first_line,this._$.first_column); $$.hijos.push($3);    }  ; 
+
+llamadaMetodo : IDENTIFICADOR  lista_params CPAR {$$ = new llamadaFunc(this._$.first_line,this._$.first_column);
+						$$.hijos = $2; $$.id = $1;  };
+
+lista_params :   APAR { $$ = [];  }
+		| APAR lista_params2 {$$ = $2; } ; 
+
+lista_params2 : param {$$ = [$1]; } | lista_params2 COMA param {$1.push($3); $$ = $1; } ; 
+
+param :  sparam  {$$ = $1; $$.id = null; }
+	| IDENTIFICADOR IGUAL sparam {$$ = $3;
+		var n = new Id(this._$.first_line,this._$.first_column);
+		n.id = $1; 
+		$$.hijos.unshift(n);
+	 } ; 
+
+sparam : exp { $$ = new SParam(this._$.first_line,this._$.first_column); $$.hijos.push($1); $$.ref = false;  }
+	| DOLAR exp {$$ = new SParam(this._$.first_line,this._$.first_column); $$.hijos.push($2); $$.ref = true; };
+
 
 asignacion : IDENTIFICADOR IGUAL exp fin {
 		$$ = new Asignacion(this._$.first_line,this._$.first_column);
@@ -269,7 +313,7 @@ si : RIF APAR exp CPAR ALLAVE instrucciones_f CLLAVE
 
 
 
-declaracion :   tipo listaID IGUAL exp                      //declaracion tipo 1
+declaracion :   tipo listaID IGUAL pvalor                      //declaracion tipo 1
 			{
 				var n = new Declaracion(this._$.first_line,this._$.first_column); 
 				n.tipo = $1; 
@@ -277,21 +321,21 @@ declaracion :   tipo listaID IGUAL exp                      //declaracion tipo 1
 				n.hijos.push($4);
 				$$ = n; 
 			}
-			|	RVAR IDENTIFICADOR DOSPUNTOSIGUAL exp       //declaracion tipo 2   
+			|	RVAR IDENTIFICADOR DOSPUNTOSIGUAL pvalor       //declaracion tipo 2   
 			{
 				$$ = new Dect2_4(this._$.first_line,this._$.first_column); 
 				$$.tipo = vddi.var; 
 				$$.id = $2; 
 				$$.hijos.push($4);
 			}
-			|	RCONST IDENTIFICADOR DOSPUNTOSIGUAL exp     //declaracion tipo 3  
+			|	RCONST IDENTIFICADOR DOSPUNTOSIGUAL pvalor     //declaracion tipo 3  
 			{
 				$$ = new Dect2_4(this._$.first_line,this._$.first_column); 
 				$$.tipo = vddi.const; 
 				$$.id = $2; 
 				$$.hijos.push($4);
 			} 
-			|	RGLOBAL IDENTIFICADOR DOSPUNTOSIGUAL exp    //declaracion tipo 4
+			|	RGLOBAL IDENTIFICADOR DOSPUNTOSIGUAL pvalor    //declaracion tipo 4
 			{
 				$$ = new Dect2_4(this._$.first_line,this._$.first_column); 
 				$$.tipo = vddi.global; 
@@ -307,6 +351,21 @@ declaracion :   tipo listaID IGUAL exp                      //declaracion tipo 1
 				$$ = n; 
 			}    
 ;
+
+pvalor : exp {$$ = $1; } 
+//		| valarray
+		;
+
+valarray : RSTRC tp ACORCH exp CCORCH {$$ = null;} 
+		|  arrvalue; 
+
+arrvalue : ALLAVE listavarr CLLAVE ;
+ 
+ listavarr : listavarr COMA elemarr 
+		| elemarr ; 
+
+elemarr : arrvalue 
+		| exp  {$$ = $1; }; 
 
 tipo : tp  {$$ = [$1];}
 		| tp ACORCH CCORCH {$$ = [$1, 0]; }
@@ -330,8 +389,8 @@ listaID :  listaID COMA IDENTIFICADOR  { $1.hijos.push($3); $$ = $1; }
 
 import : RIMPORT  listaimport fin { $$ = $2; }  ; 
 
-listaimport : listaimport COMA IDENTIFICADOR  { $1.hijos.push($3); $$ = $1;} 
-	|  IDENTIFICADOR   { var  n = new Importar(this._$.first_line,this._$.first_column); n.hijos.push($1); $$ = n;   }  ; 
+listaimport : listaimport COMA ARCHIVO  { $1.hijos.push($3); $$ = $1;} 
+	|  ARCHIVO   { var  n = new Importar(this._$.first_line,this._$.first_column); n.hijos.push($1); $$ = n;   }  ; 
    
 exp
 	: MENOS exp %prec UMENOS	{$$ = new expresionUnaria(this._$.first_line,this._$.first_column); 
@@ -371,9 +430,12 @@ exp
 	| IDENTIFICADOR				{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.id; $$.valor = $1; }
 
 	| inc_dec 					{$$ = $1;}
-	
+	| llamadaMetodo				{$$ = $1; }
+
 	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
 	| APAR RCHAR CPAR exp 		{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.char; $$.hijos.push($4);}
+
+
 ;
 
 

@@ -29,7 +29,9 @@ exp
             expresion_binaria
             expresionUnaria 
             inc_dec
-            primitivo 
+            primitivo
+            llamadafunc 
+            SParam  
 Gramaticas 
     jsharp.jison 
     jsharp.js (sepa que tiena adentro)
@@ -49,3 +51,16 @@ control
         if
         swtich
     
+funcionesNativas
+    fnat.js
+
+structs
+    structs.js
+        estructura
+
+ts
+    ts.js 
+        ts
+        mivar
+        func
+        temp_salto

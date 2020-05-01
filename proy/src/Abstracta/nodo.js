@@ -4,7 +4,7 @@ class Nodo {
     this.columna = columna;
 
     this.hijos = [];
-    console.log("nuevo nodo " + this.soy() + " " + fila + " , " + columna);
+    console.log("nuevo nodo " + this.constructor.name + " " + fila + " , " + columna);
   }
 
   soy() {
@@ -33,7 +33,13 @@ class Nodo {
     return nodo;
   }
 
-  recorrer(ts) {
+  recorrer() {
+    //en este proceso solo obtendremos las estructuras, 
+    //las variables globales y las funciones 
+    //solo :( jajaja
+  }
+
+  traducir(ts){
 
   }
 
