@@ -32,7 +32,8 @@
   <script src="./src/control/ciclos.js"></script>
   <script src="./src/funcionesNativas/fnat.js"></script>
   <script src="./src/structs/structs.js"></script>
-  
+  <script src="./src/ts/ts.js"></script>
+
 
 
 
@@ -191,11 +192,9 @@
       <nav>
         <div class="nav nav-tabs" id="consMenu" role="tablist">
           <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab"
-            aria-controls="nav-home" aria-selected="true">Consola</a>
+            aria-controls="nav-home" aria-selected="true">3D</a>
           <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#showast" role="tab"
             aria-controls="nav-profile" aria-selected="false">AST</a>
-          <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab"
-            aria-controls="nav-contact" aria-selected="false">3D</a>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -209,12 +208,27 @@
           </div>
 
         </div>
-        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">...</div>
+        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+        </div>
       </div>
 
 
 
     </div> <!-- /container -->
+
+    <br />
+    <div class="container" id="showError" style="visibility: hidden;">
+
+      <div class="card">
+
+        <div class="alert alert-danger" role="alert">
+          Errores!
+        </div>
+        <div class="card-body" id="derror">
+          <textarea class="form-control" id="cerror" rows="10"></textarea>
+        </div>
+      </div>
+    </div>
 
     <br />
   </main>
@@ -231,6 +245,11 @@
     var t2 = document.getElementById("t2");
     var li2 = document.getElementById("li2");
     var altura = 6;
+
+
+    var tvar = null;
+    var salto_temp = null;
+    var terror = null;
 
     var treeData =
     {
@@ -274,6 +293,9 @@
     var mirrorTab = {};
     var cmayor = 1;
     var pactual = 1;
+    var tglobal = null;
+    var raiz = "F";
+    var nerr = 0;
 
     tabs.push(1);
     tabs2.push(1);
@@ -378,14 +400,16 @@
       });
     }
 
-    var raiz = "F";
     function parse(input) {
       raiz = jsharp.parse(input);
       return raiz;
     }
 
+
+
     function traducir() {
 
+      document.getElementById("showError").style.visibility = "Hidden";
       if (pactual == null) {
         alert("No estas en ninguna pestaña.");
         return;
@@ -393,10 +417,58 @@
       agregarcosas();
 
       if (mirrorTab["tarea" + pactual]) {
+
+        nerr = 0;
+        tvar = document.createTextNode("");
+        terror = document.createTextNode("");
+        //tvar.appendData("nuevo string to append"); 
+        //tvar.textContent; 
+
         var texto = mirrorTab["tarea" + pactual].getValue();
         print(texto);
-
         parse(texto);
+
+
+        tglobal = new ts(null, "Global");
+
+        print("----------------------------");
+
+        for (var a = 0; a < raiz.length; a++) {
+          raiz[a].recorrer(true, tglobal);
+        }
+
+        var text = document.createTextNode("");
+
+        salto_temp = new temp_salto();
+        for (var a = 0; a < raiz.length; a++) {
+          raiz[a].traducir(tglobal);
+        }
+
+
+        var nvez = false;
+        if (salto_temp.nt > 1) {
+          text.appendData("var ")
+          for (var a = 1; a < salto_temp.nt; a++) {
+            if (nvez) {
+              text.appendData(",");
+            }
+            text.appendData("t" + a);
+            nvez = true;
+          }
+          text.appendData(";\n");
+        }
+
+        text.appendData("var Stack[];\n");
+        text.appendData("var Heap[];\n");
+        text.appendData("var P = 0;\n");
+        text.appendData("var H = 0;\n");
+        text.appendData(tvar.textContent);
+        consola.setValue(text.textContent);
+
+        if (nerr != 0) {
+          cerror.setValue(terror.textContent);
+          document.getElementById("showError").style.visibility = "visible";
+        }
       }
 
 
@@ -410,11 +482,20 @@
     var consola = CodeMirror.fromTextArea(document.getElementById("consola"), {
       lineNumbers: true,
     });
+    var cerror = CodeMirror.fromTextArea(document.getElementById("cerror"), {
+      lineNumbers: true,
+    });
 
     function print(st) {
       console.log(st);
     }
 
+    function nerror(st) {
+      print(st);
+      terror.appendData(st + "\n");
+      nerr++;
+      return null;
+    }
 
     function dibujar() {
 

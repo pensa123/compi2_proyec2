@@ -1,12 +1,41 @@
 class ts {
-    constructor() {
-        this.padre = null;
+    constructor(padre, nombre) {
+        this.padre = padre;
+        this.nombre = nombre;
         this.hijos = [];
-        this.vars = [];
-        this.funcs = [];
+        this.vars = [];   //arreglo de mivar 
+        this.nvars = [];  //nombre de variables del arreglo de arriba
+        this.funcs = [];  //arreglo de func 
+        this.nfuncs = []; //nombres de la sfunciones 
+
+        this.structs = [];   //arreglo de structs 
+        this.nstructs = [];  //nombre  de structs 
+
         this.esMetodo = false;
         this.esCiclo = false;
         this.esSwitch = false;
+
+        this.indiceStack = 0;
+        this.indiceHeap = 0;
+    }
+
+    obtenerVar(st) {
+        var n = this.nvars.indexOf(st);
+        if (n != -1) {
+            return this.vars[n];
+        } else {
+            return null;
+        }
+    }
+
+    agregarVar(nvar) {
+        if (this.nvars.indexOf(nvar.nombre) == -1) {
+            this.vars.push(nvar);
+            this.nvars.push(nvar.nombre);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
@@ -19,13 +48,19 @@ class mivar {
     //linea en la que fue asignada
     //lineas en las que fue modificada o llamada 
     //creo que solo
-    constructor() {
-        this.ambito = "";
+    constructor(ambito) {
+        this.ambito = ambito;
         this.ref = "";
         this.tipo = "";
+        this.esArreglo = false;
+        this.refHeap = false;
         this.declaracion = 0;
+        this.a = 0;
         this.usadaEn = [];
         this.tvar = 0;
+        this.nombre = "";
+        this.instanciada = false;
+        this.declarada = false;
     }
 }
 
@@ -48,10 +83,10 @@ class temp_salto {
     }
 
     nextTemp() {
-        return this.nt++;
+        return "t" + this.nt++;
     }
 
     nextSalto() {
-        return this.ns++;
+        return "L" + this.ns++;
     }
 }

@@ -7,6 +7,10 @@ class Nodo {
     console.log("nuevo nodo " + this.constructor.name + " " + fila + " , " + columna);
   }
 
+  niuerror(st) {
+    return nerror("Fila:" + this.fila + " Columna:" + this.columna + ", " + st);
+  }
+
   soy() {
     return this.constructor.name;
   }
@@ -33,16 +37,28 @@ class Nodo {
     return nodo;
   }
 
-  recorrer() {
+
+  recorrer(bool, ts) {
     //en este proceso solo obtendremos las estructuras, 
     //las variables globales y las funciones 
     //solo :( jajaja
+    this.recorrerHijos(bool, ts);
   }
 
-  traducir(ts){
-
+  recorrerHijos(bool, ts) {
+    for (var a = 0; a < this.hijos.length; a++) {
+      if (!(this.hijos[a] instanceof Nodo)) {
+        continue;
+      }
+      this.hijos[a].recorrer(bool, ts);
+    }
   }
 
+
+  traducir(ts) {
+    print("Falta traduccion en " + this.constructor.name);
+    print(this);
+  }
 }
 
 

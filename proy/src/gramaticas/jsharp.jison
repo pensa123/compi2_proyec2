@@ -91,6 +91,7 @@
 "!"					return 'NOT';
 ":"					return 'DOSPTS';
 
+\'[^\'']\'          	{ yytext = yytext.substr(1,yyleng-2); return 'CHAR'; } 
 \"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'CADENA'; }
 [0-9]+("."[0-9]+)\b   	    return 'DECIMAL';
 [0-9]+\b				return 'ENTERO';
@@ -245,7 +246,11 @@ asignacion : IDENTIFICADOR IGUAL exp fin {
 		n.id = $1; 
 		$$.hijos.push(n) ; 
 		$$.hijos.push($3); 
-		 } ;
+		 } 
+		|
+		IDENTIFICADOR ACORCH exp CCORCH IGUAL exp fin ;
+
+
 
 ciclos:  RWHILE APAR exp CPAR ALLAVE instrucciones_f CLLAVE {
 			$$ = new While(this._$.first_line,this._$.first_column);
@@ -342,7 +347,7 @@ declaracion :   tipo listaID IGUAL pvalor                      //declaracion tip
 				$$.id = $2; 
 				$$.hijos.push($4);
 			}
-			|   tipo listaID 
+			|   tipo listaID 									//Declaracion tipo 5
 			{
 				var n = new Declaracion(this._$.first_line,this._$.first_column); 
 				n.tipo = $1; 
@@ -367,15 +372,17 @@ arrvalue : ALLAVE listavarr CLLAVE ;
 elemarr : arrvalue 
 		| exp  {$$ = $1; }; 
 
-tipo : tp  {$$ = [$1];}
-		| tp ACORCH CCORCH {$$ = [$1, 0]; }
+tipo :tp  {$$ = [$1];}
+	| tp ACORCH CCORCH {$$ = [$1, 0]; }
+	| IDENTIFICADOR { $$ = $1;				}
+	| IDENTIFICADOR ACORCH CCORCH {$$ = [$1, 0]; }
+	
 	; 
 
 tp : RINTEGER 	{ $$ = vtipo.integer; 	}
 	| RDOUBLE   	{ $$ = vtipo.double;	}
 	| RCHAR     	{ $$ = vtipo.char; 		}
 	| RBOOLEAN  	{ $$ = vtipo.boolean;	} 
-	| IDENTIFICADOR { $$ = $1;				}
 	; 
 
 
@@ -426,6 +433,7 @@ exp
 	| ENTERO					{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.integer; $$.valor = Number($1); 	}
 	| DECIMAL					{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.double; $$.valor = Number($1);  	}
 	| CADENA                	{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.string; $$.valor = $1;  			}
+	| CHAR                		{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.char; $$.valor = $1;  			}
 
 	| IDENTIFICADOR				{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.id; $$.valor = $1; }
 
