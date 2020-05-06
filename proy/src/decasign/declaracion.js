@@ -3,10 +3,11 @@ var vtipo = {
     "integer": 1,
     "double": 2,
     "boolean": 3,
-    "void": 4
+    "string": 4,
+    "void": 5
 }
 
-var v_tipo = ["char", "integer", "double", "boolean", "void"];
+var v_tipo = ["char", "integer", "double", "boolean", "string", "void"];
 
 var vddi = {
     var: 0,
@@ -21,23 +22,26 @@ class Declaracion extends Nodo {
     //todo dependera de la cantidad de hijos que tenga.
     //variable tipo contiene o un numerico con las cuatro opciones de arriba
     //o si no es numerico con una cadena del identificador. 
+    //tipo 1 o tipo 5 
+
+
 
     recorrer(bool, ts) {
-        if (bool) {
-            var lid = this.hijos[0];
-            for (var a = 0; a < lid.hijos.length; a++) {
-                var nvar = new mivar(ts.nombre);
-                nvar.ref = ts.indiceHeap++;
-                nvar.refHeap = true;
-                nvar.nombre = lid.hijos[a];
-                nvar.tipo = this.tipo[0];
-                nvar.esArreglo = this.tipo.length == 2;
-                nvar.declaracion = this.fila;
-                nvar.a = a;
-                nvar.tvar = vddi.var;
-                if (!ts.agregarVar(nvar)) {
-                    this.niuerror("No se puede agregar variables con el mismo nombre " + nvar.nombre);
-                }
+        if (this.tipo[0].toLowerCase() == "string") {
+            this.tipo[0] = vtipo.string;
+        }
+        var lid = this.hijos[0];
+        for (var a = 0; a < lid.hijos.length; a++) {
+            var nvar = new mivar(ts.nombre);
+            nvar.nombre = lid.hijos[a];
+            nvar.tipo = this.tipo[0];
+            nvar.esArreglo = this.tipo.length == 2;
+            nvar.declaracionFila = this.fila;
+            nvar.declaracionColumna = this.columna;
+            nvar.a = a;
+            nvar.tvar = vddi.var; //var , const , global 
+            if (!ts.agregarVar(nvar)) {
+                this.niuerror("No se puede agregar variables con el mismo nombre " + nvar.nombre);
             }
         }
     }
@@ -54,12 +58,11 @@ class Declaracion extends Nodo {
                     continue;
                 }
                 var mivar = ts.vars[pos];
-                if (!(mivar.declaracion == this.fila && mivar.a == a)) {
+                if (!(mivar.declaracionFila == this.fila && mivar.a == a && mivar.declaracionColumna == this.columna)) {
                     continue;
                 }
                 mivar.declarada = true;
             }
-
             return "";
         }
         var n = this.hijos[1].traducir(ts);
@@ -67,6 +70,10 @@ class Declaracion extends Nodo {
         if (n.tipo <= 3) {
             if (n.tipo != this.tipo) {
                 print("Comparar casteo implicito o marcar error " + n.tipo + " " + this.tipo);
+            }
+        } else if (n.tipo == vtipo.string) {
+            if (this.tipo != vtipo.string) {
+                return this.niuerror("Una cadena debe de ser ingresada a un Stirng");
             }
         } else {
             print("Falta traducir de " + v_prim[n.valor]);
@@ -87,6 +94,7 @@ class Declaracion extends Nodo {
             }
             n.valor = nt;
         }
+        var almenosUno = false;
         for (var a = 0; a < lid.hijos.length; a++) {
             var nombre = lid.hijos[a];
             var pos = ts.nvars.indexOf(nombre);
@@ -95,25 +103,31 @@ class Declaracion extends Nodo {
                 continue;
             }
             var mivar = ts.vars[pos];
-            if (!(mivar.declaracion == this.fila && mivar.a == a)) {
+            if (!(mivar.declaracionFila == this.fila && mivar.a == a && mivar.declaracionColumna == this.columna)) {
                 continue;
             }
             if (mivar.refHeap) {
                 st += "Heap[" + mivar.ref + "] = " + n.valor + ";\n";
             } else {
-                print("Aun falta hacer referencia a stack por que hay que sacar le valor relativo.");
-                st += "Stack[" + mivar.ref + "] = " + n.valor + ";\n";
+                //print("Aun falta hacer referencia a stack por que hay que sacar le valor relativo.");
+                var nt = salto_temp.nextTemp();
+                st += nt + "= p + " + mivar.ref + ";\n";
+                st += "Stack[" + nt + "] = " + n.valor + ";\n";
             }
             mivar.instanciada = true;
             mivar.declarada = true;
+            almenosUno = true;
         }
-        return st;
+        if (almenosUno) {
+            return st;
+        } else {
+            return "";
+        }
     }
 
     dibujar(c) {
         var nodo = {};
         nodo.name = "Dec";
-
         if (Number.isInteger(this.tipo[0])) {
             nodo.name += " [" + v_tipo[this.tipo[0]] + "]";
         } else {
@@ -171,9 +185,53 @@ class decfunc extends Nodo {
     //tipo, id, parametros en los hijos
     //inst las instrucciones (agregarlo al dibujar)
 
+    traducir(ts) {
+        if (this.n3d == null) {
+            return "";
+        }
+
+        var st = "";
+
+        st += "proc " + this.n3d + " begin\n";
+        var n = this.inst.traducir(this.ts);
+        st += n.textContent;
+        st += "end\n\n";
+        return st;
+    }
 
     recorrer(bool, ts) {
-        this.inst.recorrer(false, ts);
+        this.n3d = null;
+        var name = this.id;
+        for (var a = 0; a < this.hijos.length; a++) {
+            var tp = this.hijos[a].tipo;
+            name += "_" + (tp.length == 2 ? "arr" : "n");
+            if (Number.isInteger(tp[0])) {
+                name += v_tipo[tp[0]];
+            } else {
+                st += tp[0];
+            }
+        }
+        if (this.hijos.length == 0) {
+            name += "_sin_params";
+        }
+        var mf = new func();
+        mf.nombre = "gen_" + this.id;
+        mf.nombre3d = "gen_" + name;
+        mf.params = this.hijos;
+        mf.cuerpo = this.inst;
+        mf.tiporetorno = this.tipo[0];
+        mf.devuelveArr = this.tipo.length == 2;
+        mf.declaradaEnF = this.fila;
+        mf.declaradaEnC = this.columna;
+
+
+        if (!ts.agregarFunc(mf)) {
+            this.ts = null;
+            return this.niuerror("No se pueden declarar funciones con el mismo nombre y tipo de parametros.");
+        }
+        this.n3d = "gen_" + name;
+        this.ts = new Tabla_Sim(ts, this.n3d);
+        this.inst.recorrer(false, this.ts);
     }
 
 
@@ -229,12 +287,76 @@ class Casteo extends Nodo {
 }
 
 class Asignacion extends Nodo {
+    traducir(ts) {
+        var n1 = this.hijos[0].traducir(ts);
+        if (n1 == null) {
+            return null;
+        }
+        var n2 = this.hijos[1].traducir(ts);
+        if (n2.tipo <= 3) {
+            if (n2.tipo != n1.tipo) {
+                print("Comparar casteo implicito o marcar error " + n2.tipo + " " + n1.tipo);
+            }
+        } else if (n2.tipo == vtipo.string) {
+            if (n1.tipo != vtipo.string) {
+                return this.niuerror("Una cadena debe de ser ingresada a un Stirng");
+            }
+        } else {
+            print("Falta traducir de " + v_prim[n2.valor]);
+            return null;
+        }
 
+        var st = "";
+        st += n1.cadena;
+        st += n2.cadena;
+        if (typeof n2.etV != "undefined") {
+            var nt = salto_temp.nextTemp();
+            st = nt + "=1;\n" + st;
+            for (var a = 0; a < n2.etF.length; a++) {
+                st += n2.etF[a] + ":\n";
+            }
+            st += nt + "=0;\n";
+            for (var a = 0; a < n2.etV.length; a++) {
+                st += n2.etV[a] + ":\n";
+            }
+            n2.valor = nt;
+        }
+        st += n1.valor + "= " + n2.valor + ";\n";
+
+        if (typeof n1.nvar != "undefined") {
+            var mivar = n1.nvar;
+            mivar.llamadaEn.push({ fila: this.fila, columna: this.columna });
+            mivar.instanciada = true;
+        }
+
+        return st;
+    }
 }
 
 class Id extends Nodo {
     dibujar(c) {
         c.hojas++;
         return { name: this.id };
+    }
+
+    traducir(ts) {
+        var nvar = ts.obtenerVar(this.id);
+        if (nvar == null) {
+            return this.niuerror("Variable " + this.valor + " no encontrada");
+        }
+        if (!nvar.declarada) {
+            return this.niuerror("Variable " + this.valor + " no declarada");
+        }
+        var st = "";
+        var val = "";
+        if (nvar.refHeap) {
+            val = "Heap[" + nvar.ref + "]";
+            return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
+        } else {
+            var tn = salto_temp.nextTemp();
+            st += tn + " = p +" + nvar.ref + ";\n";
+            val = "Stack[" + tn + "]";
+            return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
+        }
     }
 }

@@ -54,7 +54,6 @@ class Nodo {
     }
   }
 
-
   traducir(ts) {
     print("Falta traduccion en " + this.constructor.name);
     print(this);

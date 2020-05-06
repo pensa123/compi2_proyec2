@@ -33,6 +33,7 @@
   <script src="./src/funcionesNativas/fnat.js"></script>
   <script src="./src/structs/structs.js"></script>
   <script src="./src/ts/ts.js"></script>
+  <script src="./src/misMetodos.js"></script>
 
 
 
@@ -64,7 +65,8 @@
     }
 
     .CodeMirror-scroll {
-      max-height: 200px;
+      min-height: 100px;
+      max-height: 250px;
     }
 
     .CodeMirror pre {
@@ -142,12 +144,12 @@
   <main role="main">
 
     <!-- Main jumbotron for a primary marketing message or call to action -->
-    <br />
+    <br id="eltitle" />
     <br />
     <br />
 
-    <div class="container">
-      <h1 style="text-align: center;">Compi Estudio</h1>
+    <div  class="container">
+      <h1  style="text-align: center;">Compi Estudio</h1>
       <h2 style="text-align: center;">J#</h2>
 
       <ul class="nav nav-tabs" id="ulpest" role="tablist">
@@ -176,9 +178,16 @@
         <button type="button" class="btn btn-info" onmousedown="nPestania()">Nueva pestaña</button>
         <button type="button" class="btn btn-warning" onclick="eliminarpestania()">Cerrar pestaña</button>
 
+        <a href="#consMenu">
+          <button type="button" class="btn btn-success" onclick="traducir()">Traducir</button>
+        </a>
 
-        <button type="button" class="btn btn-success" onclick="traducir()">Traducir</button>
-        <button type="button" class="btn btn-info" onclick="dibujar()">Dibujar AST</button>
+        <a href="#consMenu">
+          <button type="button" class="btn btn-info" onclick="dibujar()">Ver AST</button>
+        </a>
+        <a href="#showError" id="btnSerror" style="visibility: hidden;">
+          <button type="button" class="btn btn-danger">Ver errores</button>
+        </a>
       </div>
     </div>
 
@@ -211,10 +220,10 @@
         <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
         </div>
       </div>
-
-
-
+      <br/>
+      <a href="#eltitle"> <button class="btn btn-info">Subir</button> </a>
     </div> <!-- /container -->
+
 
     <br />
     <div class="container" id="showError" style="visibility: hidden;">
@@ -324,8 +333,7 @@
         }
       }
 
-
-      delete mirrorTab["tarea" + n];
+      delete mirrorTab["tarea" + pactual];
 
       n = tabs2.indexOf(pactual);
       if (n == 0) {
@@ -408,7 +416,10 @@
 
 
     function traducir() {
+      $('#consMenu a[href="#nav-home"]').tab('show');
 
+
+      document.getElementById("btnSerror").style.visibility = "Hidden";
       document.getElementById("showError").style.visibility = "Hidden";
       if (pactual == null) {
         alert("No estas en ninguna pestaña.");
@@ -429,7 +440,7 @@
         parse(texto);
 
 
-        tglobal = new ts(null, "Global");
+        tglobal = new Tabla_Sim(null, "Global");
 
         print("----------------------------");
 
@@ -441,10 +452,28 @@
 
         salto_temp = new temp_salto();
         for (var a = 0; a < raiz.length; a++) {
+          raiz[a].soloFuncs = false;
           raiz[a].traducir(tglobal);
         }
 
 
+        var sf = "L0";
+
+        if (tglobal.nfuncs3d.indexOf("gen_principal_sin_params") != -1) {
+          tvar.appendData("\ncall gen_principal_sin_params;\n");
+        }
+
+        tvar.appendData("goto " + sf + ";\n\n")
+
+        for (var a = 0; a < raiz.length; a++) {
+          raiz[a].soloFuncs = true;
+          raiz[a].traducir(tglobal);
+        }
+
+
+        tvar.appendData(misFuncs.textContent);
+
+        tvar.appendData(sf + ":");
         var nvez = false;
         if (salto_temp.nt > 1) {
           text.appendData("var ")
@@ -461,17 +490,16 @@
         text.appendData("var Stack[];\n");
         text.appendData("var Heap[];\n");
         text.appendData("var P = 0;\n");
-        text.appendData("var H = 0;\n");
+        text.appendData("var H = " + tglobal.nvars.length + ";\n\n");
         text.appendData(tvar.textContent);
         consola.setValue(text.textContent);
 
         if (nerr != 0) {
           cerror.setValue(terror.textContent);
           document.getElementById("showError").style.visibility = "visible";
+          document.getElementById("btnSerror").style.visibility = "visible";
         }
       }
-
-
 
     }
 
@@ -549,10 +577,20 @@
 
     }
 
+    //Esta herramienta nos servira mas adelante con los imports :D jeje
 
+    function loadFile(filePath) {
+      var result = null;
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.open("GET", filePath, false);
+      xmlhttp.send();
+      if (xmlhttp.status == 200) {
+        result = xmlhttp.responseText;
+      }
+      return result;
+    }
 
-
-
+    var imp = new Importar(1, 1); 
   </script>
 
   <script src="./bootstrap-4.4.1-dist/js/bootstrap.bundle.min.js"

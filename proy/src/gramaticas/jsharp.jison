@@ -200,7 +200,7 @@ instrucciones_f :  declaracion fin {$$ = $1; }
 				| asignacion{$$ = $1; } 
 				| ciclos {$$ = $1}
 				| llamadaMetodo fin {$$ = $1; }
-				| fprint {$$ = $1}
+				| fprint fin {$$ = $1}
 ;
 
 
@@ -320,7 +320,7 @@ si : RIF APAR exp CPAR ALLAVE instrucciones_f CLLAVE
 
 declaracion :   tipo listaID IGUAL pvalor                      //declaracion tipo 1
 			{
-				var n = new Declaracion(this._$.first_line,this._$.first_column); 
+				var n = new Declaracion(@1.first_line,@1.first_column); 
 				n.tipo = $1; 
 				n.hijos.push($2);
 				n.hijos.push($4);
@@ -374,7 +374,7 @@ elemarr : arrvalue
 
 tipo :tp  {$$ = [$1];}
 	| tp ACORCH CCORCH {$$ = [$1, 0]; }
-	| IDENTIFICADOR { $$ = $1;				}
+	| IDENTIFICADOR { $$ = [$1];	}
 	| IDENTIFICADOR ACORCH CCORCH {$$ = [$1, 0]; }
 	
 	; 

@@ -9,7 +9,20 @@ class Instrucciones extends Nodo {
             text = document.createTextNode("");
         }
         for (var a = 0; a < this.hijos.length; a++) {
-            text.appendData(this.hijos[a].traducir(ts));
+            if (this.soloFuncs == true) {
+                if (!(this.hijos[a] instanceof decfunc)) {
+                    continue;
+                }
+            } else {
+                if ((this.hijos[a] instanceof decfunc)) {
+                    continue;
+                }
+            }
+            var app = this.hijos[a].traducir(ts);
+            if (app != null) {
+                text.appendData(app);
+            }
         }
+        return text;
     }
 }

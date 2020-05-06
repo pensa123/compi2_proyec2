@@ -390,11 +390,10 @@ class primitivo extends Nodo {
             }
             return { tipo: this.tipo, valor: val, cadena: "" };
         } else if (this.tipo == vprim.id) {
-            print(this.valor);
             var st = "";
             var nvar = ts.obtenerVar(this.valor);
             if (nvar == null) {
-                return "";
+                return this.niuerror("Variable " + this.valor + " no encontrada");
             }
 
             if (!nvar.declarada) {
@@ -405,8 +404,24 @@ class primitivo extends Nodo {
                 st += tn + "= Heap[" + nvar.ref + "];\n";
                 return { valor: tn, tipo: nvar.tipo, cadena: st };
             } else {
-                print("aun falta con el stack por que hay que hacer referencia a la posicion relativa :D");
+                var tn2 = salto_temp.nextTemp();
+                st += tn + " = p +" + nvar.ref + ";\n";
+                st += tn2 + " = Stack[" + tn + "];\n";
+                return { valor: tn2, tipo: nvar.tipo, cadena: st };
+
             }
+        } else if (this.tipo == vprim.string) {
+            var tn = salto_temp.nextTemp();
+            var st = "";
+            st += tn + "= h;\n";
+            for (var a = 0; a < this.valor.length; a++) {
+                st += "heap[h] = " + this.valor.charCodeAt(a) + ";\n";
+                st += "h = h + 1;\n";
+            }
+            st += "heap[h] = -1;\n";
+            st += "h = h + 1;\n";
+
+            return { tipo: this.tipo, valor: tn, cadena: st };
         } else {
             print("Falta traducir de " + v_prim[this.tipo] + " en primitivo (expresiones.js)");
         }
