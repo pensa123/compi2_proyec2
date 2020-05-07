@@ -5,7 +5,7 @@ var fwidth = document.getElementById("fwidth");
 print(fwidth.offsetWidth);
 
 
-var tam = 50;
+var tam = 80;
 // ************** Generate the tree diagram	 *****************
 var margin = { top: 40, right: 10, bottom: 20, left: 10 },
     width = fwidth.offsetWidth - margin.right - margin.left - 5,
@@ -38,7 +38,7 @@ function update(source) {
         links = tree.links(nodes);
 
     // Normalize for fixed-depth.
-    nodes.forEach(function (d) { d.y = d.depth * 50; });
+    nodes.forEach(function (d) { d.y = d.depth * tam; });
 
     // Declare the nodes…
     var node = svg.selectAll("g.node")

@@ -27,7 +27,7 @@ class Declaracion extends Nodo {
 
 
     recorrer(bool, ts) {
-        if (this.tipo[0].toLowerCase() == "string") {
+        if (this.tipo[0].toString().toLowerCase()  == "string") {
             this.tipo[0] = vtipo.string;
         }
         var lid = this.hijos[0];

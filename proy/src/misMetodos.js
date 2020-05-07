@@ -1,7 +1,7 @@
 var misFuncs = document.createTextNode("");
 
 //Metodo imprimir t1,t2 L1, L2
-misFuncs.appendData('proc imprimir begin\n');
+misFuncs.appendData('proc imprimir begin\n');  //t1 es la posicion de referencia del heap. 
 misFuncs.appendData('    L1: \n');
 misFuncs.appendData('    t2 = heap[t1]; \n');
 misFuncs.appendData('    if(t2 == -1) goto L2;\n');

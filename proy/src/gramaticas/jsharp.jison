@@ -91,8 +91,9 @@
 "!"					return 'NOT';
 ":"					return 'DOSPTS';
 
+["\""]([^"\""|"\n"]|("\\"|"\""))*["\""]	{ yytext = yytext.substr(1,yyleng-2).replace("\\n","\n").replace("\\N", "\n"); return 'CADENA'; }
 \'[^\'']\'          	{ yytext = yytext.substr(1,yyleng-2); return 'CHAR'; } 
-\"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'CADENA'; }
+//\"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'CADENA'; }
 [0-9]+("."[0-9]+)\b   	    return 'DECIMAL';
 [0-9]+\b				return 'ENTERO';
 
@@ -102,7 +103,9 @@
 
 
 <<EOF>>				return 'EOF';
-.					{ console.error('Este es un error léxico: ' + yytext + ', en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column); }
+.					{ console.error('Este es un error léxico: ' + yytext + ', en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column);
+						nerror("Linea " + yylloc.first_line + " Columna " + yylloc.first_column +  ", Error lexico  '" + yytext + "' no reconocido."); 
+					 }
 
 /lex
 
@@ -188,10 +191,10 @@ params2 :   params2 COMA tipo IDENTIFICADOR {
 	   	}
 	  	;
 
-instrucciones_fun : instrucciones_fun instrucciones_f {$1.hijos.push($2); $$ = $1;      }
+instrucciones_fun : instrucciones_fun instruccion_f {$1.hijos.push($2); $$ = $1;      }
 					|{$$ = new Instrucciones(this._$.first_line,this._$.first_column); } ; 
 
-instrucciones_f :  declaracion fin {$$ = $1; } 
+instruccion_f :  declaracion fin {$$ = $1; } 
 				| defest {$$ = $1; }
 				| si {$$ = $1; }
 				| switch {$$ = $1; }
@@ -252,18 +255,18 @@ asignacion : IDENTIFICADOR IGUAL exp fin {
 
 
 
-ciclos:  RWHILE APAR exp CPAR ALLAVE instrucciones_f CLLAVE {
+ciclos:  RWHILE APAR exp CPAR ALLAVE instrucciones_fun CLLAVE {
 			$$ = new While(this._$.first_line,this._$.first_column);
 			$$.hijos.push($3); 
 			$$.hijos.push($6); 
 		}
-		| RDO ALLAVE instrucciones_f CLLAVE RWHILE APAR exp CPAR fin 
+		| RDO ALLAVE instrucciones_fun CLLAVE RWHILE APAR exp CPAR fin 
 		{
 			$$ = new do_while(this._$.first_line,this._$.first_column);
 			$$.hijos = [$3, $7]; 
 
 		}
-		| RFOR APAR ifor PCOMA mfor PCOMA ffor CPAR ALLAVE instrucciones_f CLLAVE
+		| RFOR APAR ifor PCOMA mfor PCOMA ffor CPAR ALLAVE instrucciones_fun CLLAVE
 		{
 			$$ = new For(this._$.first_line,this._$.first_column);
 			$$.hijos = [$3 , $5 , $7 , $10]; 
@@ -282,7 +285,7 @@ transferencia : RBREAK fin  { $$ = new Break(this._$.first_line,this._$.first_co
 				| RRETURN PCOMA { $$ = new Return(this._$.first_line,this._$.first_column);   }
 				| RRETURN exp PCOMA {$$ = new Return(this._$.first_line,this._$.first_column); $$.hijos.push($2);  } ; 
 
-switch : RSWITCH APAR exp CPAR ALLAVE instrucciones_f CLLAVE
+switch : RSWITCH APAR exp CPAR ALLAVE instrucciones_fun CLLAVE
 {
 	$$ = new Switch(this._$.first_line,this._$.first_column);
 	$$.hijos.push($3);
@@ -292,20 +295,20 @@ switch : RSWITCH APAR exp CPAR ALLAVE instrucciones_f CLLAVE
 
 
 
-si : RIF APAR exp CPAR ALLAVE instrucciones_f CLLAVE 
+si : RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE 
 	{
 		$$ = new If(this._$.first_line,this._$.first_column); 
 		$$.hijos.push($3); 
 		$$.hijos.push($6); 
 	}
-	| RIF APAR exp CPAR ALLAVE instrucciones_f CLLAVE RELSE ALLAVE instrucciones_f CLLAVE
+	| RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE RELSE ALLAVE instrucciones_fun CLLAVE
 	{
 		$$ = new If(this._$.first_line,this._$.first_column); 
 		$$.hijos.push($3); 
 		$$.hijos.push($6);
 		$$.hijos.push($10);
 	}
-	| RIF APAR exp CPAR ALLAVE instrucciones_f CLLAVE RELSE si  
+	| RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE RELSE si  
 	{
 		
 		$$ = new If(this._$.first_line,this._$.first_column); 

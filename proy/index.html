@@ -148,8 +148,8 @@
     <br />
     <br />
 
-    <div  class="container">
-      <h1  style="text-align: center;">Compi Estudio</h1>
+    <div class="container">
+      <h1 style="text-align: center;">Compi Estudio</h1>
       <h2 style="text-align: center;">J#</h2>
 
       <ul class="nav nav-tabs" id="ulpest" role="tablist">
@@ -220,7 +220,7 @@
         <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
         </div>
       </div>
-      <br/>
+      <br />
       <a href="#eltitle"> <button class="btn btn-info">Subir</button> </a>
     </div> <!-- /container -->
 
@@ -408,9 +408,19 @@
       });
     }
 
+
+    var err = "";
     function parse(input) {
-      raiz = jsharp.parse(input);
-      return raiz;
+
+      try {
+        raiz = jsharp.parse(input);
+        return true;
+      } catch (error) {
+
+        err = error.message;
+        nerror(err);
+        return false;
+      }
     }
 
 
@@ -437,7 +447,13 @@
 
         var texto = mirrorTab["tarea" + pactual].getValue();
         print(texto);
-        parse(texto);
+        if (!parse(texto)) {
+          cerror.setValue(terror.textContent);
+          document.getElementById("showError").style.visibility = "visible";
+          document.getElementById("btnSerror").style.visibility = "visible";
+
+          return;
+        }
 
 
         tglobal = new Tabla_Sim(null, "Global");
@@ -520,7 +536,11 @@
 
     function nerror(st) {
       print(st);
-      terror.appendData(st + "\n");
+      if (nerr == 0) {
+        terror.appendData(st);
+      } else {
+        terror.appendData("\n" + st);
+      }
       nerr++;
       return null;
     }
