@@ -2,10 +2,6 @@ class Tabla_Sim {
     constructor(padre, nombre) {
         this.padre = padre;
 
-        if (padre != null) {
-            padre.hijos.push(this);
-        }
-
         this.nombre = nombre;
         this.hijos = [];
 
@@ -27,6 +23,44 @@ class Tabla_Sim {
 
         this.indiceStack = 0;
         this.indiceHeap = 0;
+
+        this.tipoRetorno = null;
+        this.retornoEsArr = false;
+
+
+        this.sContinue = null;
+        this.sBreak = null;
+        this.sreturn = null;
+
+        this.nvarDeclaradas = 0;
+
+        if (padre != null) {
+            padre.hijos.push(this);
+            if (padre != tglobal) {
+                this.indiceStack = padre.indiceStack;
+            }
+        }
+    }
+
+
+    getBreak() {
+        if (this.sBreak != null) {
+            return this.sBreak;
+        }
+        if (this.padre != tglobal) {
+            return this.padre.getBreak();
+        }
+        return null;
+    }
+
+    getContinue() {
+        if (this.sContinue != null) {
+            return this.sContinue;
+        }
+        if (this.padre != tglobal) {
+            return this.padre.getContinue();
+        }
+        return null;
     }
 
     obtenerFunc(func) {
@@ -123,7 +157,7 @@ class func {
 class temp_salto {
     constructor() {
         this.nt = 6;
-        this.ns = 9;
+        this.ns = 7;
     }
 
     nextTemp() {

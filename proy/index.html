@@ -506,7 +506,8 @@
         text.appendData("var Stack[];\n");
         text.appendData("var Heap[];\n");
         text.appendData("var P = 0;\n");
-        text.appendData("var H = " + tglobal.nvars.length + ";\n\n");
+        text.appendData("var H = " + tglobal.nvars.length + ";\n");
+        text.appendData("var E = 0;\n\n");
         text.appendData(tvar.textContent);
         consola.setValue(text.textContent);
 
@@ -598,7 +599,6 @@
     }
 
     //Esta herramienta nos servira mas adelante con los imports :D jeje
-
     function loadFile(filePath) {
       var result = null;
       var xmlhttp = new XMLHttpRequest();

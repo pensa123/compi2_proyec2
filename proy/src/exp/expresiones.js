@@ -96,6 +96,10 @@ class expresion_binaria extends Nodo {
             var st = "";
             var vi = this.hijos[0].traducir(ts);
             var vd = this.hijos[1].traducir(ts);
+
+            if (vi == null || vd == null) {
+                return null;
+            }
             var tr = salto_temp.nextTemp();
             var tipo = null;
 
@@ -110,7 +114,9 @@ class expresion_binaria extends Nodo {
             var vd = this.hijos[1].traducir(ts);
             var tipo = null;
 
-
+            if (vi == null || vd == null) {
+                return null;
+            }
 
             st += vi.cadena;
             st += vd.cadena;
@@ -134,6 +140,9 @@ class expresion_binaria extends Nodo {
             var vd = this.hijos[1].traducir(ts);
             var tipo = null;
 
+            if (vi == null || vd == null) {
+                return null;
+            }
             st += vi.cadena;
             st += vd.cadena;
 
@@ -158,6 +167,10 @@ class expresion_binaria extends Nodo {
             var etF = [];
             var vi = this.hijos[0].traducir(ts);
             var vd = this.hijos[1].traducir(ts);
+
+            if (vi == null || vd == null) {
+                return null;
+            }
             var st = "";
 
 
@@ -223,6 +236,10 @@ class expresion_binaria extends Nodo {
             var etF = [];
             var vi = this.hijos[0].traducir(ts);
             var vd = this.hijos[1].traducir(ts);
+
+            if (vi == null || vd == null) {
+                return null;
+            }
             var st = "";
 
             var etVI = [];
@@ -405,7 +422,7 @@ class primitivo extends Nodo {
                 return { valor: tn, tipo: nvar.tipo, cadena: st };
             } else {
                 var tn2 = salto_temp.nextTemp();
-                st += tn + " = p +" + nvar.ref + ";\n";
+                st += tn + " = p + " + nvar.ref + ";\n";
                 st += tn2 + " = Stack[" + tn + "];\n";
                 return { valor: tn2, tipo: nvar.tipo, cadena: st };
 
@@ -413,7 +430,7 @@ class primitivo extends Nodo {
         } else if (this.tipo == vprim.string) {
             var tn = salto_temp.nextTemp();
             var st = "";
-            st += tn + "= h;\n";
+            st += tn + " = h;\n";
             for (var a = 0; a < this.valor.length; a++) {
                 st += "heap[h] = " + this.valor.charCodeAt(a) + ";\n";
                 st += "h = h + 1;\n";
@@ -433,10 +450,80 @@ class llamadaFunc extends Nodo {
     soy() {
         return "LlamadaFunc [" + this.id + "]";
     }
+
+    traducir(ts) {
+
+        /*print(ts.nvarDeclaradas);
+        print(this);
+        print(this.hijos);*/
+
+        var st = "";
+        var nt = salto_temp.nextTemp();
+
+        st += nt + " =  p +" + ts.nvarDeclaradas + ";\n";
+
+        var param = [];
+
+        var nombreFunc = this.id;
+        for (var a = 0; a < this.hijos.length; a++) {
+            this.hijos[a].prel = nt;
+            this.hijos[a].nparam = a;
+            var pr = this.hijos[a].traducir(ts);
+            param.push(pr);
+
+            print(pr);
+            var tp = pr.tipo;
+            nombreFunc += "_n";
+            if (Number.isInteger(tp)) {
+                nombreFunc += v_tipo[tp];
+            } else {
+                nombreFunc += tp;
+            }
+        }
+
+        if (this.hijos.length == 0) {
+            nombreFunc += "_sin_params";
+        }
+
+        var nf2 = "gen_" + nombreFunc;
+        var nfunc = tglobal.nfuncs3d.indexOf(nf2);
+        if (nfunc == -1) {
+            return this.niuerror("No se encuentra la funcion " + nombreFunc);
+        }
+
+        nfunc = tglobal.funcs[nfunc];
+
+        print(nfunc);
+        for (var a = 0; a < param.length; a++) {
+            var nref = nfunc.params[a].gref;
+            var niut = salto_temp.nextTemp();
+
+
+            st += param[a].cadena;
+            st += niut + " = " + nt + " + " + nref + ";\n";
+            st += "Stack[" + niut + "] = " + param[a].valor + ";\n";
+        }
+
+        st += "p = p + " + ts.nvarDeclaradas + ";\n";
+
+        st += "call " + nf2 + ";\n";
+
+        st += "p = p - " + ts.nvarDeclaradas + ";\n";
+
+
+
+        return st;
+    }
 }
 
 class SParam extends Nodo {
     soy() {
         return "Param " + (this.ref ? "R" : "V ");
+    }
+
+    traducir(ts) {
+        var nr = this.hijos[0].traducir(ts);
+        //falta ver si es por referencia o valor :( 
+        return nr;
     }
 }

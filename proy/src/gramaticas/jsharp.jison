@@ -440,7 +440,7 @@ exp
 
 	| IDENTIFICADOR				{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.id; $$.valor = $1; }
 
-	| inc_dec 					{$$ = $1;}
+	| inc_dec 					{$$ = $1; $$.retValor = true; }
 	| llamadaMetodo				{$$ = $1; }
 
 	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
@@ -450,8 +450,8 @@ exp
 ;
 
 
-inc_dec:IDENTIFICADOR MASMAS		{ $$ = new inc_dec(this._$.first_line,this._$.first_column); $$.operando = voperando.masmas; $$.id = $1; }
-	|   IDENTIFICADOR MENOSMENOS	{ $$ = new inc_dec(this._$.first_line,this._$.first_column); $$.operando = voperando.menosmenos; $$.id = $1; }
+inc_dec:IDENTIFICADOR MASMAS		{ $$ = new inc_dec(this._$.first_line,this._$.first_column); $$.operando = voperando.masmas; $$.id = $1; $$.retValor = false; }
+	|   IDENTIFICADOR MENOSMENOS	{ $$ = new inc_dec(this._$.first_line,this._$.first_column); $$.operando = voperando.menosmenos; $$.id = $1; $$.retValor = false; }
 ;
 
 visibilidad : RPUBLIC | RPRIVATE  ;

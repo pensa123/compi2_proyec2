@@ -27,7 +27,7 @@ class Declaracion extends Nodo {
 
 
     recorrer(bool, ts) {
-        if (this.tipo[0].toString().toLowerCase()  == "string") {
+        if (this.tipo[0].toString().toLowerCase() == "string") {
             this.tipo[0] = vtipo.string;
         }
         var lid = this.hijos[0];
@@ -62,6 +62,7 @@ class Declaracion extends Nodo {
                     continue;
                 }
                 mivar.declarada = true;
+                ts.nvarDeclaradas++;
             }
             return "";
         }
@@ -116,6 +117,7 @@ class Declaracion extends Nodo {
             }
             mivar.instanciada = true;
             mivar.declarada = true;
+            ts.nvarDeclaradas++;
             almenosUno = true;
         }
         if (almenosUno) {
@@ -193,6 +195,7 @@ class decfunc extends Nodo {
         var st = "";
 
         st += "proc " + this.n3d + " begin\n";
+
         var n = this.inst.traducir(this.ts);
         st += n.textContent;
         st += "end\n\n";
@@ -208,7 +211,7 @@ class decfunc extends Nodo {
             if (Number.isInteger(tp[0])) {
                 name += v_tipo[tp[0]];
             } else {
-                st += tp[0];
+                name += tp[0];
             }
         }
         if (this.hijos.length == 0) {
@@ -231,6 +234,17 @@ class decfunc extends Nodo {
         }
         this.n3d = "gen_" + name;
         this.ts = new Tabla_Sim(ts, this.n3d);
+
+        if (this.tipo[0] != vtipo.void) {
+            this.ts.tipoRetorno = this.tipo[0];
+            this.ts.retornoEsArr = this.tipo.length == 2;
+            this.ts.indiceStack++;
+            this.ts.nvarDeclaradas = 1;
+        }
+
+        for (var a = 0; a < this.hijos.length; a++) {
+            this.hijos[a].recorrer(false, this.ts);
+        }
         this.inst.recorrer(false, this.ts);
     }
 
@@ -354,7 +368,7 @@ class Id extends Nodo {
             return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
         } else {
             var tn = salto_temp.nextTemp();
-            st += tn + " = p +" + nvar.ref + ";\n";
+            st += tn + " = p + " + nvar.ref + ";\n";
             val = "Stack[" + tn + "]";
             return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
         }
