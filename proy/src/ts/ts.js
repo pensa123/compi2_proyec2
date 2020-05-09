@@ -43,6 +43,16 @@ class Tabla_Sim {
     }
 
 
+    getReturn() {
+        if (this.sreturn != null) {
+            return { goto: this.sreturn, tipo: this.tipoRetorno, esarr: this.retornoEsArr };
+        }
+        if (this.padre != tglobal) {
+            return this.padre.getReturn();
+        }
+        return null;
+    }
+
     getBreak() {
         if (this.sBreak != null) {
             return this.sBreak;

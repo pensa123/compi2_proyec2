@@ -20,6 +20,11 @@ class If extends Nodo {
 
         this.hijos[0].estaEnUnIf = true;
         var n = this.hijos[0].traducir(ts);
+
+        if (n == null) {
+            return null;
+        }
+
         var st = n.cadena;
         var ssalida = null;
 

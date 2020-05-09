@@ -93,11 +93,23 @@ class expresion_binaria extends Nodo {
                     print("Error, no se puede dividir en 0");
                 }
             }*/
+
+
+
             var st = "";
             var vi = this.hijos[0].traducir(ts);
-            var vd = this.hijos[1].traducir(ts);
+            if (vi == null) {
+                return null;
+            }
+            if (this.hijos[1] instanceof llamadaFunc) {
+                print(vi.valor);
+                if (isNaN(vi.valor)) {
+                    this.hijos[1].addToStack = vi.valor;
+                }
+            }
 
-            if (vi == null || vd == null) {
+            var vd = this.hijos[1].traducir(ts);
+            if (vd == null) {
                 return null;
             }
             var tr = salto_temp.nextTemp();
@@ -458,9 +470,12 @@ class llamadaFunc extends Nodo {
         print(this.hijos);*/
 
         var st = "";
-        var nt = salto_temp.nextTemp();
+        var tret = null;
+        var nsum = 0;
+        var nrefNV = ts.nvarDeclaradas;
+        var t1;
 
-        st += nt + " =  p +" + ts.nvarDeclaradas + ";\n";
+
 
         var param = [];
 
@@ -490,28 +505,52 @@ class llamadaFunc extends Nodo {
         if (nfunc == -1) {
             return this.niuerror("No se encuentra la funcion " + nombreFunc);
         }
-
         nfunc = tglobal.funcs[nfunc];
+        if (nfunc.tiporetorno == vtipo.void && this.exp) {
+            return this.niuerror("En expresion no se pueden llamar a funciones de tipo void.");
+        }
 
-        print(nfunc);
+        if (typeof this.addToStack != "undefined") {
+            t1 = salto_temp.nextTemp()
+            nsum = 1;
+            st += t1 + " = p + " + nrefNV + ";  ##Para que no se pierda el temporal\n";
+            st += "Stack[" + t1 + "] = " + this.addToStack + ";\n";
+        }
+
+
+        var nt = salto_temp.nextTemp();
+        st += nt + " =  p +" + (ts.nvarDeclaradas + nsum) + "; ## cambio de ambito simulado. \n";
+
         for (var a = 0; a < param.length; a++) {
             var nref = nfunc.params[a].gref;
             var niut = salto_temp.nextTemp();
-
-
             st += param[a].cadena;
             st += niut + " = " + nt + " + " + nref + ";\n";
             st += "Stack[" + niut + "] = " + param[a].valor + ";\n";
         }
 
-        st += "p = p + " + ts.nvarDeclaradas + ";\n";
+
+        st += "p = p + " + (ts.nvarDeclaradas + nsum) + ";\n";
 
         st += "call " + nf2 + ";\n";
 
-        st += "p = p - " + ts.nvarDeclaradas + ";\n";
+        if (nfunc.tiporetorno != vtipo.void) {
+            if (this.exp) {
+                tret = salto_temp.nextTemp();
+                st += tret + "= Stack[p];\n";
+            }
+        }
 
+        st += "p = p - " + (ts.nvarDeclaradas + nsum) + ";\n";
 
+        if (nsum != 0) {
+            st += t1 + " = p + " + nrefNV + ";  ##Para recuperar el temporal\n";
+            st += this.addToStack + " = Stack[" + t1 + "];\n";
+        }
 
+        if (this.exp) {
+            return { cadena: st, valor: tret, tipo: nfunc.tiporetorno };
+        }
         return st;
     }
 }

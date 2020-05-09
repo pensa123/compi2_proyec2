@@ -113,7 +113,7 @@ break;
 case 6: case 7:
  this.$ = $$[$0]; 
 break;
-case 8: case 18: case 19: case 20: case 21: case 22: case 23: case 35: case 69: case 76: case 117:
+case 8: case 18: case 19: case 20: case 21: case 22: case 23: case 35: case 69: case 76:
 this.$ = $$[$0]; 
 break;
 case 9:
@@ -134,7 +134,7 @@ case 10:
 					this.$.inst = $$[$0-1]; 
 				
 break;
-case 11: case 47: case 49: case 51: case 52: case 116:
+case 11: case 47: case 49: case 51: case 52:
 this.$ = $$[$0];
 break;
 case 12:
@@ -155,11 +155,14 @@ break;
 case 15:
 $$[$0-1].hijos.push($$[$0]); this.$ = $$[$0-1];      
 break;
-case 17: case 25:
+case 17:
 this.$ = $$[$0-1]; 
 break;
 case 24:
 this.$ = $$[$0]
+break;
+case 25:
+this.$ = $$[$0-1]; this.$.exp = false; 
 break;
 case 26:
 this.$ = $$[$0-1]
@@ -454,6 +457,12 @@ break;
 case 115:
  this.$ = new primitivo(this._$.first_line,this._$.first_column); this.$.tipo = vprim.id; this.$.valor = $$[$0]; 
 break;
+case 116:
+this.$ = $$[$0]; this.$.retValor = true; 
+break;
+case 117:
+this.$ = $$[$0]; this.$.exp = true;  
+break;
 case 118:
  this.$ = new Casteo(this._$.first_line,this._$.first_column); this.$.tipo = vtipo.integer; this.$.hijos.push($$[$0]);   
 break;
@@ -461,10 +470,10 @@ case 119:
  this.$ = new Casteo(this._$.first_line,this._$.first_column); this.$.tipo = vtipo.char; this.$.hijos.push($$[$0]);
 break;
 case 120:
- this.$ = new inc_dec(this._$.first_line,this._$.first_column); this.$.operando = voperando.masmas; this.$.id = $$[$0-1]; 
+ this.$ = new inc_dec(this._$.first_line,this._$.first_column); this.$.operando = voperando.masmas; this.$.id = $$[$0-1]; this.$.retValor = false; 
 break;
 case 121:
- this.$ = new inc_dec(this._$.first_line,this._$.first_column); this.$.operando = voperando.menosmenos; this.$.id = $$[$0-1]; 
+ this.$ = new inc_dec(this._$.first_line,this._$.first_column); this.$.operando = voperando.menosmenos; this.$.id = $$[$0-1]; this.$.retValor = false; 
 break;
 }
 },

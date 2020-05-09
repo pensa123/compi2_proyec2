@@ -194,10 +194,14 @@ class decfunc extends Nodo {
 
         var st = "";
 
+        var sreturn = salto_temp.nextSalto();
+        this.ts.sreturn = sreturn;
         st += "proc " + this.n3d + " begin\n";
 
         var n = this.inst.traducir(this.ts);
         st += n.textContent;
+
+        st += sreturn + ":\n";
         st += "end\n\n";
         return st;
     }
@@ -356,10 +360,10 @@ class Id extends Nodo {
     traducir(ts) {
         var nvar = ts.obtenerVar(this.id);
         if (nvar == null) {
-            return this.niuerror("Variable " + this.valor + " no encontrada");
+            return this.niuerror("Variable " + this.id + " no encontrada");
         }
         if (!nvar.declarada) {
-            return this.niuerror("Variable " + this.valor + " no declarada");
+            return this.niuerror("Variable " + this.id + " no declarada");
         }
         var st = "";
         var val = "";

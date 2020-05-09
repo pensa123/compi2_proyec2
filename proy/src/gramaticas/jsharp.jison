@@ -202,7 +202,7 @@ instruccion_f :  declaracion fin {$$ = $1; }
 				| cases {$$ = $1; }
 				| asignacion{$$ = $1; } 
 				| ciclos {$$ = $1}
-				| llamadaMetodo fin {$$ = $1; }
+				| llamadaMetodo fin {$$ = $1; $$.exp = false; }
 				| fprint fin {$$ = $1}
 ;
 
@@ -441,7 +441,7 @@ exp
 	| IDENTIFICADOR				{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.id; $$.valor = $1; }
 
 	| inc_dec 					{$$ = $1; $$.retValor = true; }
-	| llamadaMetodo				{$$ = $1; }
+	| llamadaMetodo				{$$ = $1; $$.exp = true;  }
 
 	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
 	| APAR RCHAR CPAR exp 		{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.char; $$.hijos.push($4);}
