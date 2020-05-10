@@ -34,7 +34,7 @@ var v_operando = ["++", "--",
 var s_operando = ["++", "--",
     "xor", "||",
     "&&", "==",
-    "!=", "===",
+    "<>", "===",
     ">", "<",
     ">=", "<=",
     "+", "-",
@@ -106,7 +106,9 @@ class expresion_binaria extends Nodo {
             }
 
             var vd = this.hijos[1].traducir(ts);
-            addToStack.pop();
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
             if (vd == null) {
                 return null;
             }
@@ -121,25 +123,37 @@ class expresion_binaria extends Nodo {
         } else if (this.operando == voperando.igualigual || this.operando == voperando.difigual) {
             var st = "";
             var vi = this.hijos[0].traducir(ts);
-            var vd = this.hijos[1].traducir(ts);
-            var tipo = null;
-
-            if (vi == null || vd == null) {
-                return null;
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
             }
 
+            var vd = this.hijos[1].traducir(ts);
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
+                return null;
+            }
             st += vi.cadena;
             st += vd.cadena;
+            var val = "";
+            if (vd.tipo == vtipo.string && vi.tipo == vtipo.string) {
+                st += "t6 = " + vi.valor + ";\n";
+                st += "t7 = " + vd.valor + ";\n";
+                st += "call compCadenas;\n";
+                val = "t10 " + s_operando[this.operando] + " 1";
+            } else {
+                val = vi.valor + " " + s_operando[this.operando] + " " + vd.valor;
+            }
 
             if (typeof this.estaEnUnIf != "undefined") {
-                var val = vi.valor + " " + s_operando[this.operando] + " " + vd.valor;
                 return { valor: val, tipo: vtipo.boolean, cadena: st };
             }
 
             var tr = salto_temp.nextTemp();
             var ns = salto_temp.nextSalto();
             st += tr + "= 1;\n";
-            st += "if (" + vi.valor + " " + s_operando[this.operando] + " " + vd.valor + ") goto " + ns + ";\n";
+            st += "if (" + val + ") goto " + ns + ";\n";
             st += tr + "= 0;\n";
             st += ns + ":\n";
             return { valor: tr, tipo: vtipo.boolean, cadena: st };
@@ -386,6 +400,45 @@ class inc_dec extends Nodo {
         c.comp();
         return nodo;
     }
+
+
+    traducir(ts) {
+        var mvar = ts.obtenerVar(this.id);
+        if (mvar == null) {
+            return this.niuerror("No se ha encontrado la variable " + mvar.id);
+        }
+        if (!mvar.declarada) {
+            return this.niuerror("No se ha declarado la variable " + mvar.id);
+        }
+
+        if (!(mvar.tipo == vtipo.integer || mvar.tipo == vtipo.double)) {
+            return this.niuerror("Solo se puede hacer incremento y decremento con variables numericas. ");
+        }
+
+        var t1 = salto_temp.nextTemp();
+        var t2 = salto_temp.nextTemp();
+        var signo = this.operando == voperando.masmas ? "+" : "-";
+
+        var st = "";
+        if (mvar.refHeap) {
+            st += t1 + " = Heap[" + mvar.ref + "];\n";
+            st += t2 + " = " + t1 + " " + signo + " 1;\n";
+            st += "Heap[" + mvar.ref + "]" + t2 + ";\n";
+        } else {
+            var tref = salto_temp.nextTemp();
+            st += tref + " = p + " + mvar.ref + ";\n"
+            st += t1 + " = Stack[" + tref + "];\n";
+            st += t2 + " = " + t1 + " " + signo + " 1;\n";
+            st += "Stack[" + tref + "] = " + t2 + ";\n";
+        }
+
+
+        if (this.retValor) {
+            return { cadena: st, valor: t1, tipo: mvar.tipo };
+        }
+        print(st);
+        return st;
+    }
 }
 
 class primitivo extends Nodo {
@@ -471,7 +524,11 @@ class llamadaFunc extends Nodo {
         var st = "##Inicio llamada " + this.id + "\n";
         var tret = null;
         var nsum = 0;
-        var nrefNV = ts.nvarDeclaradas;
+        var nrefNV = ts.getNvarDeclaradas();
+
+
+        var nvdec = nrefNV;
+
         var t1;
         var nt = salto_temp.nextTemp();
 
@@ -507,26 +564,27 @@ class llamadaFunc extends Nodo {
         }
 
         var nf2 = "gen_" + nombreFunc;
-        var nfunc = tglobal.nfuncs3d.indexOf(nf2);
-        if (nfunc == -1) {
+        var nfunc = tglobal.obtenerFunc(nf2); 
+        if (nfunc == null) {
             return this.niuerror("No se encuentra la funcion " + nombreFunc);
         }
-        nfunc = tglobal.funcs[nfunc];
         if (nfunc.tiporetorno == vtipo.void && this.exp) {
             return this.niuerror("En expresion no se pueden llamar a funciones de tipo void.");
         }
+
+        print("mi stack " + addToStack.length);
 
         if (addToStack.length != 0) {
             t1 = salto_temp.nextTemp()
             for (var a = 0; a < addToStack.length; a++) {
                 nsum++;
-                st += t1 + " = p + " + (nrefNV + a) + ";  ##Para que no se pierda el temporal\n";
+                st += t1 + " = p + " + (nrefNV + a) + ";  ##Para que no se pierda el temporal " + addToStack[a] + "\n";
                 st += "Stack[" + t1 + "] = " + addToStack[a] + ";\n";
             }
         }
 
 
-        st += nt + " =  p +" + (ts.nvarDeclaradas + nsum) + "; ## cambio de ambito simulado. \n";
+        st += nt + " =  p + " + (nvdec + nsum) + "; ## cambio de ambito simulado. \n";
 
         for (var a = 0; a < param.length; a++) {
             var nref = nfunc.params[a].gref;
@@ -536,7 +594,7 @@ class llamadaFunc extends Nodo {
         }
 
 
-        st += "p = p + " + (ts.nvarDeclaradas + nsum) + ";\n";
+        st += "p = p + " + (nvdec + nsum) + ";\n";
 
         st += "call " + nf2 + ";\n";
 
@@ -547,11 +605,11 @@ class llamadaFunc extends Nodo {
             }
         }
 
-        st += "p = p - " + (ts.nvarDeclaradas + nsum) + ";\n";
+        st += "p = p - " + (nvdec + nsum) + ";\n";
         if (nsum != 0) {
             print("si entra aqui");
             for (var a = 0; a < addToStack.length; a++) {
-                st += t1 + " = p + " + (nrefNV + a) + ";  ##Para recuperar el temporal\n";
+                st += t1 + " = p + " + (nrefNV + a) + ";  ##Para recuperar el temporal " + addToStack[a] + "\n";
                 st += addToStack[a] + " = Stack[" + t1 + "];\n";
             }
         }

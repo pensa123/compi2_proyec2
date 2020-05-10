@@ -426,10 +426,27 @@
 
     var addToStack = [];
 
+    function replaceCadena(st) {
+      st = replaceAll(st, "\\n", "\n");
+      st = replaceAll(st, "\\N", "\n");
+      st = replaceAll(st, "\\r", "\r");
+      st = replaceAll(st, "\\R", "\r");
+      st = replaceAll(st, "\\t", "\t");
+      st = replaceAll(st, "\\T", "\t");
+      st = replaceAll(st, "\\\"", "\"");
+
+      return st;
+    }
+
+    function replaceAll(string, search, replace) {
+      return string.split(search).join(replace);
+    }
+
+
     function traducir() {
       $('#consMenu a[href="#nav-home"]').tab('show');
 
-
+      addToStack = [];
       document.getElementById("btnSerror").style.visibility = "Hidden";
       document.getElementById("showError").style.visibility = "Hidden";
       if (pactual == null) {

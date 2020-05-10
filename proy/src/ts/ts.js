@@ -42,6 +42,13 @@ class Tabla_Sim {
         }
     }
 
+    getNvarDeclaradas() {
+        var n = this.nvarDeclaradas;
+        if (this.padre != tglobal) {
+            n += this.padre.getNvarDeclaradas();
+        }
+        return n;
+    }
 
     getReturn() {
         if (this.sreturn != null) {
@@ -74,7 +81,9 @@ class Tabla_Sim {
     }
 
     obtenerFunc(func) {
-        return (this.nfuncs3d.indexOf(func) != -1);
+        var n = this.nfuncs3d.indexOf(func.toLowerCase());
+        return n == -1 ? null : this.funcs[n];
+
     }
 
     agregarFunc(func) {
@@ -83,13 +92,13 @@ class Tabla_Sim {
             return false;
         }
         this.funcs.push(func);
-        this.nfuncs.push(func.nombre);
-        this.nfuncs3d.push(func.nombre3d);
+        this.nfuncs.push(func.nombre.toLowerCase());
+        this.nfuncs3d.push(func.nombre3d.toLowerCase());
         return true;
     }
 
     obtenerVar(st) {
-        var n = this.nvars.indexOf(st);
+        var n = this.nvars.indexOf(st.toLowerCase());
         if (n != -1) {
             return this.vars[n];
         } else {
@@ -112,7 +121,7 @@ class Tabla_Sim {
             nvar.ref = this.indiceStack++;
         }
         this.vars.push(nvar);
-        this.nvars.push(nvar.nombre);
+        this.nvars.push(nvar.nombre.toLowerCase());
         return true;
 
     }
@@ -164,20 +173,7 @@ class func {
 }
 
 
-class temp_salto {
-    constructor() {
-        this.nt = 6;
-        this.ns = 7;
-    }
 
-    nextTemp() {
-        return "t" + this.nt++;
-    }
-
-    nextSalto() {
-        return "L" + this.ns++;
-    }
-}
 
 
 /*

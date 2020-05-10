@@ -76,5 +76,30 @@ class If extends Nodo {
 
 class Switch extends Nodo {
 
+    recorrer(bool, ts) {
+        this.ts = new Tabla_Sim(ts, "Switch");
+
+        this.hijos[0].recorrer(bool, ts);
+        this.hijos[1].recorrer(bool, this.ts);
+
+        this.ts.esSwitch = true;
+    }
+
+    traducir(ts) {
+        var n1 = this.hijos[0].traducir(ts);
+
+        if (n1 == null) {
+            return null;
+        }
+        var st = n1.cadena;
+
+        var n2 = this.hijos[1].tradSwitch(this.ts, n1);
+        if (n2 == null) {
+            return null;
+        }
+        st += n2.textContent;
+
+        return st;
+    }
 
 }

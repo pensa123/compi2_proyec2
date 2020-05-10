@@ -91,7 +91,7 @@
 "!"					return 'NOT';
 ":"					return 'DOSPTS';
 
-["\""]([^"\""|"\n"]|("\\"|"\""))*["\""]	{ yytext = yytext.substr(1,yyleng-2).replace("\\n","\n").replace("\\N", "\n"); return 'CADENA'; }
+["\""](("\\""\"")|[^"\""])*["\""]	{ yytext = yytext.substr(1,yyleng-2); yytext = replaceCadena(yytext);  return 'CADENA'; }
 \'[^\'']\'          	{ yytext = yytext.substr(1,yyleng-2); return 'CHAR'; } 
 //\"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'CADENA'; }
 [0-9]+("."[0-9]+)\b   	    return 'DECIMAL';
@@ -204,6 +204,7 @@ instruccion_f :  declaracion fin {$$ = $1; }
 				| ciclos {$$ = $1}
 				| llamadaMetodo fin {$$ = $1; $$.exp = false; }
 				| fprint fin {$$ = $1}
+				| inc_dec fin {$$ = $1}
 ;
 
 

@@ -12,6 +12,8 @@ class While extends Nodo {
         var n = this.hijos[0].traducir(ts);
         var st = "";
         var sinicio = salto_temp.nextSalto();
+
+        ts.sContinue = sinicio; 
         st += sinicio + ":\n";
         st += n.cadena;
         if (typeof n.etV == "undefined") {
@@ -24,7 +26,7 @@ class While extends Nodo {
         }
 
         var sfin = n.etF[0];
-
+        ts.sBreak = sfin; 
         for (var a = 0; a < n.etV.length; a++) {
             st += n.etV[a] + ":\n";
         }
@@ -51,6 +53,7 @@ class do_while extends Nodo {
         var sinicio = salto_temp.nextSalto();
         var st = sinicio + ":\n";
 
+        ts.sContinue = sinicio; 
         var n2 = this.hijos[0].traducir(this.ts);
 
         st += n2.textContent;
@@ -68,7 +71,7 @@ class do_while extends Nodo {
             n.etF = [s2];
         }
         var sfin = n.etF[0];
-
+        ts.sBreak = sfin; 
         for (var a = 0; a < n.etV.length; a++) {
             st += n.etV[a] + ":\n";
         }

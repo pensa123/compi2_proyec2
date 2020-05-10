@@ -55,7 +55,11 @@ class Return extends Nodo {
 }
 
 class Case extends Nodo {
+    traducir(ts) {
+        var nn = this.hijos[0].traducir(ts);
 
+        return nn; 
+    }
 }
 
 class Default extends Nodo {
