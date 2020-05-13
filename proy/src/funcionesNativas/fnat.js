@@ -2,11 +2,10 @@ class Print extends Nodo {
 
     traducir(ts) {
         var n = this.hijos[0].traducir(ts);
-        var st = n.cadena;
-
-
-
         if (n == null || n == "") { return null; }
+
+
+        var st = n.cadena;
         if (n.tipo == vtipo.string) {
             st += "t1 = " + n.valor + ";\n";
             st += "call imprimir;\n";

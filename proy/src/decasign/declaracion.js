@@ -70,7 +70,11 @@ class Declaracion extends Nodo {
         if (n == null) { return ""; }
         if (n.tipo <= 3) {
             if (n.tipo != this.tipo) {
-                print("Comparar casteo implicito o marcar error " + n.tipo + " " + this.tipo);
+
+                if (!compImplicito(this.tipo, n.tipo)) {
+                    return this.niuerror("No se puede asignar un " + getTipo(n.tipo) + " a un " + getTipo(this.tipo));
+                }
+
             }
         } else if (n.tipo == vtipo.string) {
             if (this.tipo != vtipo.string) {
@@ -158,7 +162,6 @@ class Declaracion extends Nodo {
 
 class Dect2_4 extends Nodo {
     //tipo, id y exp 
-
     dibujar(c) {
         var nodo = {};
         nodo.name = "Dec";
@@ -180,6 +183,65 @@ class Dect2_4 extends Nodo {
 
         return nodo;
     }
+
+    recorrer(bool, ts) {
+        var nvar
+        if (this.tipo == vddi.global) {
+            nvar = new mivar(tglobal.nombre);
+        } else {
+            nvar = new mivar(ts.nombre);
+        }
+
+        nvar.nombre = this.id;
+        nvar.tipo = null;
+        nvar.esArreglo = this.tipo.length == 2;
+        nvar.declaracionFila = this.fila;
+        nvar.declaracionColumna = this.columna;
+        nvar.a = 0;
+        nvar.tvar = vddi.var; //var , const , global 
+        if (this.tipo == vddi.global) {
+            if (!tglobal.agregarVar(nvar)) {
+                this.niuerror("No se puede agregar variables con el mismo nombre " + nvar.nombre);
+            }
+        } else {
+            if (!ts.agregarVar(nvar)) {
+                this.niuerror("No se puede agregar variables con el mismo nombre " + nvar.nombre);
+            }
+        }
+    }
+
+    traducir(ts) {
+        var nvar = null;
+        if (this.tipo == vddi.global) {
+            nvar = tglobal.obtenerVar(this.id);
+        } else {
+            nvar = ts.obtenerVar(this.id);
+        }
+        if (nvar == null) {
+            return this.niuerror("No se ha encontrado la variable " + this.id);
+        }
+
+        var n = this.hijos[0].traducir(ts);
+        if (n == null) {
+            return null;
+        }
+        var st = n.cadena;
+
+        nvar.tipo = n.tipo;
+
+        if (nvar.refHeap) {
+            st += "Heap[" + nvar.ref + "] = " + n.valor + ";\n";
+        } else {
+            var t = salto_temp.nextTemp();
+            st += t + " = p + " + ref;
+            st += "Stack[" + t + "] =  " + n.valor + ";\n";
+        }
+
+        nvar.declarada = true; 
+        nvar.instanciada = true; 
+        return st;
+    }
+
 }
 
 
@@ -302,6 +364,34 @@ class decfunc extends Nodo {
 
 class Casteo extends Nodo {
 
+    soy() {
+        return "Casteo (" + v_tipo[this.tipo] + ")";
+    }
+
+    traducir(ts) {
+        var n = this.hijos[0].traducir(ts);
+        if (this.tipo == n.tipo) {
+            return n;
+        }
+
+        if (!(n.tipo == vtipo.double || n.tipo == vtipo.char || n.tipo == vtipo.integer)) {
+            return this.niuerror("Solo se puede hacer caseto explicito de Double o entero.");
+        }
+        if (n.tipo == vtipo.double) {
+            var st = n.cadena;
+            if (!isNaN(n.valor)) {
+                var tn = salto_temp.nextTemp();
+                st += tn + " = " + n.valor + ";\n"
+                n.valor = tn;
+            }
+            var t = salto_temp.nextTemp();
+            st += t + " = " + n.valor + " % 1;\n";
+            st += n.valor + " = " + n.valor + " - " + t + ";\n";
+            n.cadena = st;
+        }
+        n.tipo = this.tipo;
+        return n;
+    }
 }
 
 class Asignacion extends Nodo {
@@ -377,4 +467,21 @@ class Id extends Nodo {
             return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
         }
     }
+}
+
+function getTipo(tp) {
+    if (isNaN(tp)) {
+        return tp;
+    }
+    return v_tipo[tp];
+}
+
+function compImplicito(ti, td) {
+    if (ti == td) { return true; }
+    if (ti == vtipo.double) {
+        if (td == vtipo.integer || td == vtipo.char) {
+            return true;
+        }
+    }
+    return (ti == vtipo.integer && td == vtipo.char);
 }

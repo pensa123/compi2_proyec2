@@ -85,17 +85,7 @@ class expresion_binaria extends Nodo {
             potencia: 17
         */
 
-        if (this.operando == voperando.mas || this.operando == voperando.menos
-            || this.operando == voperando.por || this.operando == voperando.modulo
-            || this.operando == voperando.dividido) {
-            /*if (naux.tipo == vprim.integer || vprim.double) {
-                if (naux.valor == 0) {
-                    print("Error, no se puede dividir en 0");
-                }
-            }*/
-
-
-
+        if (this.operando == voperando.mas) {
             var st = "";
             var vi = this.hijos[0].traducir(ts);
             if (vi == null) {
@@ -104,7 +94,6 @@ class expresion_binaria extends Nodo {
             if (isNaN(vi.valor)) {
                 addToStack.push(vi.valor);
             }
-
             var vd = this.hijos[1].traducir(ts);
             if (isNaN(vi.valor)) {
                 addToStack.pop();
@@ -113,13 +102,72 @@ class expresion_binaria extends Nodo {
                 return null;
             }
             var tr = salto_temp.nextTemp();
-            var tipo = null;
+            var tipo = vtipo.integer;
+            st += vi.cadena;
+            st += vd.cadena;
+            if (vi.tipo == vtipo.string || vd.tipo == vtipo.string) {
+                //st += tr + "=" + vi.valor + s_operando[this.operando] + vd.valor + ";\n";
+                st += tr + "= h;\n";
+                st += "t1 = " + vi.valor + ";\n";
+                st += "call insCadenaEnHeap;\n";
+                st += "t1 = " + vd.valor + ";\n";
+                st += "call insCadenaEnHeap;\n";
+                st += "Heap[h] = -1;\n";
+                st += "h = h + 1;\n"
+                return { valor: tr, tipo: vtipo.string.tipo, cadena: st };
+            }
 
+            if (!(compImplicito(vtipo.double, vi.tipo) && compImplicito(vtipo.double, vd.tipo))) {
+                return this.niuerror("En " + v_operando[this.operando] + " se esperan dos numericos.");
+            }
+
+            if (vi.tipo == vtipo.double || vd.tipo == vtipo.double) {
+                tipo = vtipo.double;
+            }
+
+            st += tr + "=" + vi.valor + s_operando[this.operando] + vd.valor + ";\n";
+            return { valor: tr, tipo: tipo, cadena: st };
+        } else if (this.operando == voperando.menos
+            || this.operando == voperando.por || this.operando == voperando.dividido) {
+            /*if (naux.tipo == vprim.integer || vprim.double) {
+                if (naux.valor == 0) {
+                    print("Error, no se puede dividir en 0");
+                }
+            }*/
+            var st = "";
+            var vi = this.hijos[0].traducir(ts);
+            if (vi == null) {
+                return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
+            var vd = this.hijos[1].traducir(ts);
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
+                return null;
+            }
+
+            if (!(compImplicito(vtipo.double, vi.tipo) && compImplicito(vtipo.double, vd.tipo))) {
+                return this.niuerror("En " + v_operando[this.operando] + " se esperan dos numericos.");
+            }
+            var tipo = vtipo.integer;
+            if (this.operando == voperando.dividido) {
+                tipo = vtipo.double;
+            }
+            if (vd.tipo == vtipo.double || vi.tipo == vtipo.double) {
+                tipo = vtipo.double
+            }
+
+            var tr = salto_temp.nextTemp();
+            var tipo = null;
             st += vi.cadena;
             st += vd.cadena;
             st += tr + "=" + vi.valor + s_operando[this.operando] + vd.valor + ";\n";
+            return { valor: tr, tipo: tipo, cadena: st };
 
-            return { valor: tr, tipo: vi.tipo, cadena: st };
         } else if (this.operando == voperando.igualigual || this.operando == voperando.difigual) {
             var st = "";
             var vi = this.hijos[0].traducir(ts);
@@ -161,12 +209,25 @@ class expresion_binaria extends Nodo {
             || this.operando == voperando.menor || this.operando == voperando.menorigual) {
             var st = "";
             var vi = this.hijos[0].traducir(ts);
-            var vd = this.hijos[1].traducir(ts);
-            var tipo = null;
-
-            if (vi == null || vd == null) {
+            if (vi == null) {
                 return null;
             }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
+            var vd = this.hijos[1].traducir(ts);
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
+                return null;
+            }
+
+            var tipo = null;
+            if (!(compImplicito(vtipo.double, vi.tipo) && compImplicito(vtipo.double, vd.tipo))) {
+                return this.niuerror("En " + v_operando[this.operando] + " se esperan comparar dos valores numericos.");
+            }
+
             st += vi.cadena;
             st += vd.cadena;
 
@@ -190,9 +251,17 @@ class expresion_binaria extends Nodo {
             var etV = [];
             var etF = [];
             var vi = this.hijos[0].traducir(ts);
+            if (vi == null) {
+                return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
             var vd = this.hijos[1].traducir(ts);
-
-            if (vi == null || vd == null) {
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
                 return null;
             }
             var st = "";
@@ -259,10 +328,18 @@ class expresion_binaria extends Nodo {
             var etV = [];
             var etF = [];
             var vi = this.hijos[0].traducir(ts);
-            var vd = this.hijos[1].traducir(ts);
-
-            if (vi == null || vd == null) {
+            if (vi == null) {
                 return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
+            var vd = this.hijos[1].traducir(ts);
+            if (vd == null) {
+                return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
             }
             var st = "";
 
@@ -333,6 +410,58 @@ class expresion_binaria extends Nodo {
 
             var midata = { tipo: vtipo.boolean, cadena: st, etV: etV, etF: etF };
             return midata;
+        } else if (this.operando == voperando.potencia) {
+            var vi = this.hijos[0].traducir(ts);
+            if (vi == null) {
+                return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
+            var vd = this.hijos[1].traducir(ts);
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
+                return null;
+            }
+            if (!(compImplicito(vtipo.integer, vi.tipo) && compImplicito(vtipo.integer, vd.tipo))) {
+                return this.niuerror("En potencia solo se esperan dos enteros.");
+            }
+
+            var st = vi.cadena + vd.cadena;
+
+            var tr = salto_temp.nextTemp();
+            st += "t3 = " + vi.valor + ";\n";
+            st += "t4 = " + vd.valor + ";\n";
+            st += "call potencia;\n";
+            st += tr + " = t5;\n";
+
+            return { valor: tr, tipo: vtipo.integer, cadena: st };
+
+        } else if (this.operando == voperando.modulo) {
+            var vi = this.hijos[0].traducir(ts);
+            if (vi == null) {
+                return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
+            var vd = this.hijos[1].traducir(ts);
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
+                return null;
+            }
+            if (!(compImplicito(vtipo.integer, vi.tipo) && compImplicito(vtipo.integer, vd.tipo))) {
+                return this.niuerror("En modulo solo se esperan dos enteros.");
+            }
+            var st = vi.cadena + vd.cadena;
+            var tr = salto_temp.nextTemp();
+            st += tr + " = " + vi.valor + " % " + vd.valor + ";\n";
+
+            return { valor: tr, tipo: vtipo.integer, cadena: st };
         } else {
 
             print("Falta traducir " + v_operando[this.operando] + " " + this.operando + " " + " en expresion_binaria(expresiones.js)");
@@ -520,6 +649,10 @@ class llamadaFunc extends Nodo {
         print(this);
         print(this.hijos);*/
 
+        if (ts == tglobal) {
+            return this.niuerror("No se pueden hacer llamadas a funciones en el ambito global.");
+        }
+
         print(addToStack);
         var st = "##Inicio llamada " + this.id + "\n";
         var tret = null;
@@ -535,6 +668,13 @@ class llamadaFunc extends Nodo {
         var param = [];
 
         var nombreFunc = this.id;
+
+
+        var posnomfunc = [];
+        var posnomfunc2 = [];
+
+        posnomfunc.push("gen_" + this.id);
+
         addToStack.push(nt);
         for (var a = 0; a < this.hijos.length; a++) {
             this.hijos[a].prel = nt;
@@ -545,11 +685,37 @@ class llamadaFunc extends Nodo {
             print(pr);
             var tp = pr.tipo;
             nombreFunc += "_n";
+
+            for (var b = 0; b < posnomfunc.length; b++) {
+                posnomfunc[b] += "_n";
+            }
+
             if (Number.isInteger(tp)) {
                 nombreFunc += v_tipo[tp];
+                if (tp == vtipo.char) {
+                    for (var b = 0; b < posnomfunc.length; b++) {
+                        posnomfunc2.push(posnomfunc[b] + v_tipo[vtipo.char]);
+                        posnomfunc2.push(posnomfunc[b] + v_tipo[vtipo.integer]);
+                        posnomfunc2.push(posnomfunc[b] + v_tipo[vtipo.double]);
+                    }
+                } else if (tp == vtipo.integer) {
+                    for (var b = 0; b < posnomfunc.length; b++) {
+                        posnomfunc2.push(posnomfunc[b] + v_tipo[vtipo.integer]);
+                        posnomfunc2.push(posnomfunc[b] + v_tipo[vtipo.double]);
+                    }
+                } else {
+                    for (var b = 0; b < posnomfunc.length; b++) {
+                        posnomfunc2.push(posnomfunc[b] + v_tipo[tp]);
+                    }
+                }
             } else {
                 nombreFunc += tp;
+                for (var b = 0; b < posnomfunc.length; b++) {
+                    posnomfunc2.push(posnomfunc[b] + tp);
+                }
             }
+            posnomfunc = posnomfunc2;
+            posnomfunc2 = [];
             st += param[a].cadena;
             addToStack.push(pr.valor);
         }
@@ -561,10 +727,24 @@ class llamadaFunc extends Nodo {
 
         if (this.hijos.length == 0) {
             nombreFunc += "_sin_params";
+            posnomfunc[0] += "_sin_params";
         }
 
         var nf2 = "gen_" + nombreFunc;
-        var nfunc = tglobal.obtenerFunc(nf2); 
+
+
+        var nfunc = null;
+
+        for (var a = 0; a < posnomfunc.length; a++) {
+            nfunc = tglobal.obtenerFunc(posnomfunc[a]);
+            if (nfunc != null) {
+                nf2 = posnomfunc[a];
+                break;
+            }
+        }
+
+
+
         if (nfunc == null) {
             return this.niuerror("No se encuentra la funcion " + nombreFunc);
         }

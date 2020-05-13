@@ -362,18 +362,19 @@ declaracion :   tipo listaID IGUAL pvalor                      //declaracion tip
 ;
 
 pvalor : exp {$$ = $1; } 
-//		| valarray
+		| valarray
 		;
 
-valarray : RSTRC tp ACORCH exp CCORCH {$$ = null;} 
-		|  arrvalue; 
+valarray : RSTRC tp ACORCH exp CCORCH {$$ = new niu_arr(@1.first_line, @1.first_column); $$.tipo = $2; $$.hijos.push($4);  } 
+		|  arrvalue                   {$$ = $1; }
+		; 
 
-arrvalue : ALLAVE listavarr CLLAVE ;
+arrvalue : ALLAVE listavarr CLLAVE { $$ = new arr_content(@1.first_line , @1.first_column); $$.hijos = $2; };
  
- listavarr : listavarr COMA elemarr 
-		| elemarr ; 
+ listavarr : listavarr COMA elemarr {$$ = $1; $$.push($3); }
+		| elemarr {$$ = []; $$.push($1); } ; 
 
-elemarr : arrvalue 
+elemarr : arrvalue {$$ = $1; }
 		| exp  {$$ = $1; }; 
 
 tipo :tp  {$$ = [$1];}

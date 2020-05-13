@@ -1,5 +1,17 @@
 var misFuncs = document.createTextNode("");
 
+/*
+    imprimir    t1 -> ref al heap de lo que se quiere imprimir. 
+    potencia    t3 -> base, t4 -> exponente, t5 -> resulado 
+    compcadena  t6 -> cad1 , t7 -> cad2 , t10 -> resultado 1 o 0 
+    doubleToSt  t11 -> el numero y se mete al heap la cadena. 
+    intToSt     t11 -> el numero y se mete al heap la cadena. 
+    pBool       t17 -> si es 1 imprime true sino false, 
+    insCadenaEnHeap t1 -> ref al heap de la cadena que se quiere meter otra vez al heap. 
+    metBoolheap     t1 -> mete true o false al heap dependiendo de t1     
+*/
+
+
 //Metodo imprimir t1,t2 
 //L1, L2
 misFuncs.appendData('proc imprimir begin\n');  //t1 es la posicion de referencia del heap. 
@@ -52,12 +64,149 @@ misFuncs.appendData('        t10 = 0; \n');
 misFuncs.appendData('    L9:         \n');
 misFuncs.appendData('end\n\n');
 
-//Continuamos en t11, L10
+//Metodo doubleToSt y t11, t12, t13, t14, t15, t16 , t17
+
+//t11 va el int o double y obtener h antes de llamar jejeje
+
+
+misFuncs.appendData('proc doubleToSt begin \n');
+misFuncs.appendData('    t12 = t11 % 1; \n');
+misFuncs.appendData('    t16 = t12; \n');
+misFuncs.appendData('    t17 = 0; \n');
+misFuncs.appendData('    if(t12 <> 0)goto L10; \n');
+misFuncs.appendData('    call intToSt; \n');
+misFuncs.appendData('    goto L11; \n');
+misFuncs.appendData('    L10:\n');
+misFuncs.appendData('        t12 = t16 % 1;\n');
+misFuncs.appendData('        t13 = t16 - t12; \n');
+misFuncs.appendData('        if(t13 <> 0) goto L20; \n');
+misFuncs.appendData('         t17 = t17 + 1; \n');
+misFuncs.appendData('    L20:    \n');
+misFuncs.appendData('        if(t12 == 0) goto L17;\n');
+misFuncs.appendData('        t16 = t16 * 10; \n');
+misFuncs.appendData('        goto L10; \n');
+misFuncs.appendData('    L17: \n');
+misFuncs.appendData('        call intToSt; \n');
+misFuncs.appendData('        Heap[h] = 46;\n');
+misFuncs.appendData('        h = h + 1;  \n');
+misFuncs.appendData('        t11 = t16; \n');
+misFuncs.appendData('    L21: \n');
+misFuncs.appendData('        t17 = t17 - 1;\n');
+misFuncs.appendData('        if(t17 == 0) goto L22;\n');
+misFuncs.appendData('        Heap[h] = 48;\n');
+misFuncs.appendData('        h = h + 1; \n');
+misFuncs.appendData('        goto L21; \n');
+misFuncs.appendData('    L22: \n');
+misFuncs.appendData('        call intToSt; \n');
+misFuncs.appendData('    L11: \n');
+misFuncs.appendData('end\n\n');
+
+// ------------------------------------------------------------------------------------------
+
+misFuncs.appendData('proc intToSt begin \n');
+misFuncs.appendData('    if(t11 <> 0) goto L16;\n');
+misFuncs.appendData('        Heap[h] = 48; \n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        goto L15; \n');
+misFuncs.appendData('    L16:\n');
+misFuncs.appendData('        if(t11 >= 0) goto L12;  ##t11 es el numero\n');
+misFuncs.appendData('            Heap[H] = 45; \n');
+misFuncs.appendData('            H = h + 1; \n');
+misFuncs.appendData('            t11 = 0 - t11;\n');
+misFuncs.appendData('    L12:\n');
+misFuncs.appendData('        t12 = 0; ## Contador 1\n');
+misFuncs.appendData('        t13 = 1; ## n \n');
+misFuncs.appendData('    L13: ## inicio del while \n');
+misFuncs.appendData('        t14 = t13 * 10; \n');
+misFuncs.appendData('        if(t14 > t11) goto L14;\n');
+misFuncs.appendData('            t13 = t13 * 10; \n');
+misFuncs.appendData('            t12 = t12 + 1; \n');
+misFuncs.appendData('        goto L13; \n');
+misFuncs.appendData('    L14:  ## Fin del while e inicio del siguiente while jejeje\n');
+misFuncs.appendData('        if(t13 <= 0) goto L15; \n');
+misFuncs.appendData('            t14 = t11 / t13; ## t14 es a \n');
+misFuncs.appendData('            t15 = t14 % 1; ## a % 1\n');
+misFuncs.appendData('            t14 = t14 - t15;  ## a = a - (a % 1)\n');
+misFuncs.appendData('            t15 = t14 * t13;\n');
+misFuncs.appendData('            t11 = t11 - t15;\n');
+misFuncs.appendData('            t14 = t14 + 48; \n');
+misFuncs.appendData('            Heap[h] = t14; \n');
+misFuncs.appendData('            h = h + 1; \n');
+misFuncs.appendData('            t13 = t13 / 10; \n');
+misFuncs.appendData('            if(t12 == 0) goto L15;\n');
+misFuncs.appendData('            t12 = t12 - 1;\n');
+misFuncs.appendData('        goto L14; \n');
+misFuncs.appendData('    L15:  ## fin del segundo while \n');
+misFuncs.appendData('end\n\n');
+
+
+//Continuamos en t17 y L18
+
+
+//T17 se mete el booleano 
+misFuncs.appendData('proc pBool begin \n');
+misFuncs.appendData('if(t17 == 0) goto L18;\n');
+misFuncs.appendData('    print("%c",84);\n');
+misFuncs.appendData('    print("%c",114);\n');
+misFuncs.appendData('    print("%c",117);\n');
+misFuncs.appendData('    print("%c",101);\n');
+misFuncs.appendData('goto L19; \n');
+misFuncs.appendData('L18: \n');
+misFuncs.appendData('    print("%c",70);\n');
+misFuncs.appendData('    print("%c",97);\n');
+misFuncs.appendData('    print("%c",108);\n');
+misFuncs.appendData('    print("%c",115);\n');
+misFuncs.appendData('    print("%c",101);\n');
+misFuncs.appendData('L19: \n');
+misFuncs.appendData('end\n\n');
+
+
+misFuncs.appendData('proc insCadenaEnHeap begin \n');
+misFuncs.appendData('    L23: \n');
+misFuncs.appendData('        t2 = heap[t1]; \n');
+misFuncs.appendData('        if(t2 == -1)goto L24;\n');
+misFuncs.appendData('        Heap[h] = t2; \n');
+misFuncs.appendData('        h = h +1; \n');
+misFuncs.appendData('        t1 = t1 + 1; \n');
+misFuncs.appendData('        goto L23; \n');
+misFuncs.appendData('    L24: \n');
+misFuncs.appendData('end\n\n');
+
+
+misFuncs.appendData('proc metBoolheap begin \n');
+misFuncs.appendData('    if(t1 <> 1) goto L25;\n');
+misFuncs.appendData('        Heap[h] =84;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =114;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =117;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =101;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('    goto L26; \n');
+misFuncs.appendData('    L25: \n');
+misFuncs.appendData('        Heap[h] =70;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =97;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =108;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =115;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('        Heap[h] =101;\n');
+misFuncs.appendData('        h = h + 1;\n');
+misFuncs.appendData('    L26: \n');
+misFuncs.appendData('end \n\n');
+
+//continuamos en t18  Y L27
+
+
+
 
 class temp_salto {
     constructor() {
-        this.nt = 11;
-        this.ns = 10;
+        this.nt = 18;
+        this.ns = 27;
     }
 
     nextTemp() {

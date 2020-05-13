@@ -34,6 +34,7 @@
   <script src="./src/structs/structs.js"></script>
   <script src="./src/ts/ts.js"></script>
   <script src="./src/misMetodos.js"></script>
+  <script src="./src/dec_arr/decarr.js"></script>
 
 
 
@@ -185,6 +186,17 @@
         <a href="#consMenu">
           <button type="button" class="btn btn-info" onclick="dibujar()">Ver AST</button>
         </a>
+
+
+        <a href="#consMenu" class="btn btn-warning" onclick="gtsvar()">
+          TS Variables
+        </a>
+
+
+        <a href="#consMenu" class="btn btn-success" onclick="gtsfunc()">
+          TS Funciones
+        </a>
+
         <a href="#showError" id="btnSerror" style="visibility: hidden;">
           <button type="button" class="btn btn-danger">Ver errores</button>
         </a>
@@ -204,6 +216,13 @@
             aria-controls="nav-home" aria-selected="true">3D</a>
           <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#showast" role="tab"
             aria-controls="nav-profile" aria-selected="false">AST</a>
+
+          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#tsVar" role="tab"
+            aria-controls="nav-profile" aria-selected="false">Variables</a>
+          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#tsFunc" role="tab"
+            aria-controls="nav-profile" aria-selected="false">Funciones</a>
+
+
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -217,7 +236,61 @@
           </div>
 
         </div>
-        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+
+        <div class="tab-pane fade" id="tsVar" role="tabpanel" aria-labelledby="nav-contact-tab">
+
+          <div style="border-color: lightblue; border-style:double;" class="table-responsive">
+            <table class="table">
+
+              <table class="table">
+                <thead class="thead-light">
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Ambito</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Es arreglo</th>
+                    <th scope="col">Referencia</th>
+                    <th scope="col">Declarada en</th>
+                    <!-- <th scope="col">Usada en</th> -->
+                    <th scope="col">Fue instanciada</th>
+                  </tr>
+                </thead>
+                <tbody id="tBodyVar">
+                  <td colspan="4">No se ha generado tabla de variables.</td>
+                </tbody>
+              </table>
+            </table>
+
+          </div>
+
+        </div>
+
+        <div class="tab-pane fade" id="tsFunc" role="tabpanel" aria-labelledby="nav-contact-tab">
+
+          <div style="border-color: lightblue; border-style:double;" class="table-responsive">
+            <table class="table">
+
+              <table class="table">
+                <thead class="thead-light">
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Nombre pasado a 3d</th>
+                    <th scope="col">Cantidad de parametros</th>
+                    <th scope="col">Tipo de retorno</th>
+                    <th scope="col">devuevle Arreglo</th>
+                    <th scope="col">Declarada en</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyFunc">
+                  <td colspan="4">No se ha generado tabla de variables.</td>
+                </tbody>
+              </table>
+            </table>
+
+          </div>
+
         </div>
       </div>
       <br />
@@ -434,6 +507,7 @@
       st = replaceAll(st, "\\t", "\t");
       st = replaceAll(st, "\\T", "\t");
       st = replaceAll(st, "\\\"", "\"");
+      st = replaceAll(st, "\\\\", "\\");
 
       return st;
     }
@@ -564,10 +638,82 @@
       return null;
     }
 
+    function gtsfunc() {
+      if (tglobal == null) {
+        alert("Debes de haber ejecutado algun archivo para poder generar la tabla.");
+        return;
+      }
+
+      var mitr = document.getElementById("tbodyFunc");
+      var txt = document.createTextNode("");
+
+      for (var a = 0; a < tglobal.funcs.length; a++) {
+        var fc = tglobal.funcs[a];
+        txt.appendData('<tr>\n');
+        txt.appendData('	<th scope="row">' + (a + 1) + '</th>\n');
+        txt.appendData('	<td>' + fc.nombre + '</td>\n');
+        txt.appendData('	<td>' + fc.nombre3d + '</td>\n');
+        txt.appendData('	<td>' + fc.params.length + '</td>\n');
+        txt.appendData('	<td>' + (isNaN(fc.tiporetorno) ? fc.tiporetorno : v_tipo[fc.tiporetorno]) + '</td>\n');
+        txt.appendData('	<td>' + (fc.devuelveArr ? "Si" : "No") + '</td>\n');
+        txt.appendData('	<td>Fila ' + fc.declaradaEnF + ', Columna ' + fc.declaradaEnC + '</td>\n');
+        txt.appendData('</tr>\n');
+      }
+
+      $('#consMenu a[href="#tsFunc"]').tab('show');
+      mitr.innerHTML = txt.textContent;
+
+    }
+
+    var contNVar = 1;
+    function gtsvar() {
+      if (tglobal == null) {
+        alert("Debes de haber ejecutado algun archivo para poder generar la tabla.");
+        return;
+      }
+
+      var mitr = document.getElementById("tBodyVar");
+
+      var txt = document.createTextNode("");
+
+      contNVar = 1;
+      meterVariables(txt, tglobal);
+
+
+      $('#consMenu a[href="#tsVar"]').tab('show');
+      mitr.innerHTML = txt.textContent;
+
+
+    }
+
+    function meterVariables(txt, taux) {
+
+      for (var a = 0; a < taux.vars.length; a++) {
+        var vr = taux.vars[a];
+        txt.appendData('<tr>\n');
+        txt.appendData('	<th scope="row">' + (contNVar++) + '</th>\n');
+        txt.appendData('	<td>' + vr.ambito + '</td>\n');
+        txt.appendData('	<td>' + vr.nombre + '</td>\n');
+        txt.appendData('	<td>' + (isNaN(vr.tipo) ? vr.tipo : v_tipo[vr.tipo]) + '</td>\n');
+        txt.appendData('	<td>' + (vr.esArreglo ? "Si" : "No") + '</td>\n');
+        txt.appendData('	<td>' + (vr.refHeap ? vr.ref : "p + " + vr.ref) + '</td>\n');
+        txt.appendData('	<td>Fila ' + vr.declaracionFila + ', Columna ' + vr.declaracionColumna + '</td>\n');
+        txt.appendData('	<td>' + (vr.instanciada ? "Si" : "No") + '</td>\n');
+        txt.appendData('</tr>\n');
+      }
+
+      for (var a = 0; a < taux.hijos.length; a++) {
+        meterVariables(txt, taux.hijos[a]);
+      }
+
+    }
+
+
     function dibujar() {
 
 
       if (raiz == "F") {
+        alert("Debes de ejcutar un archivo alguna vez para generar el arbol.");
         return;
       }
 

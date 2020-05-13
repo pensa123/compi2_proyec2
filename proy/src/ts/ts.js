@@ -110,7 +110,7 @@ class Tabla_Sim {
     }
 
     agregarVar(nvar) {
-        if (this.nvars.indexOf(nvar.nombre) != -1) {
+        if (this.nvars.indexOf(nvar.nombre.toLowerCase()) != -1) {
             return false;
         }
 
