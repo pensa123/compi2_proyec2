@@ -114,7 +114,7 @@ class expresion_binaria extends Nodo {
                 st += "call insCadenaEnHeap;\n";
                 st += "Heap[h] = -1;\n";
                 st += "h = h + 1;\n"
-                return { valor: tr, tipo: vtipo.string.tipo, cadena: st };
+                return { valor: tr, tipo: vtipo.string, cadena: st };
             }
 
             if (!(compImplicito(vtipo.double, vi.tipo) && compImplicito(vtipo.double, vd.tipo))) {
@@ -125,7 +125,7 @@ class expresion_binaria extends Nodo {
                 tipo = vtipo.double;
             }
 
-            st += tr + "=" + vi.valor + s_operando[this.operando] + vd.valor + ";\n";
+            st += tr + "=" + vi.valor + " " + s_operando[this.operando] + " " + vd.valor + ";\n";
             return { valor: tr, tipo: tipo, cadena: st };
         } else if (this.operando == voperando.menos
             || this.operando == voperando.por || this.operando == voperando.dividido) {
@@ -158,14 +158,14 @@ class expresion_binaria extends Nodo {
                 tipo = vtipo.double;
             }
             if (vd.tipo == vtipo.double || vi.tipo == vtipo.double) {
-                tipo = vtipo.double
+                tipo = vtipo.double;
             }
 
             var tr = salto_temp.nextTemp();
-            var tipo = null;
             st += vi.cadena;
             st += vd.cadena;
             st += tr + "=" + vi.valor + s_operando[this.operando] + vd.valor + ";\n";
+            print(tipo);
             return { valor: tr, tipo: tipo, cadena: st };
 
         } else if (this.operando == voperando.igualigual || this.operando == voperando.difigual) {
@@ -504,13 +504,21 @@ class expresionUnaria extends Nodo {
             return { valor: nt, tipo: tu.tipo, cadena: st };
         } else if (this.operando == voperando.not) {
             if (tu.tipo == vtipo.boolean) {
-                //falta ver lo que trae el return ya que si vienen etiquetas simplemente se cambia. 
+                //falta ver lo que trae el return ya que si vienen etiquetas simplemente se cambia.
+
+                if (typeof tu.etV != "undefined") {
+                    var aux = tu.etV;
+                    tu.etV = tu.etF;
+                    tu.etF = aux;
+                    return tu;
+                }
+
                 var nt = salto_temp.nextTemp();
-                st += nt + "= " + tu.valor + " -1;\n";
-                var tn = salto_temp.nextTemp();
-                st += tn + "= -1;\n";
+                st += nt + "= " + tu.valor + " - 1;\n";
                 var tn2 = salto_temp.nextTemp();
-                st += tn2 + "=" + nt + "*" + tn;
+                st += tn2 + "=" + nt + "*-1;\n";
+                print("_------------------------_");
+                print(st);
                 return { valor: tn2, tipo: vtipo.boolean, cadena: st };
             } else {
                 print("Para hacer un not debe de ser de tipo booleano. ");
@@ -684,10 +692,13 @@ class llamadaFunc extends Nodo {
 
             print(pr);
             var tp = pr.tipo;
-            nombreFunc += "_n";
-
+            var stsum = "_n";
+            if (typeof pr.esarr != "undefined" && pr.esarr) {
+                stsum = "_arr";
+            }
+            nombreFunc += stsum;
             for (var b = 0; b < posnomfunc.length; b++) {
-                posnomfunc[b] += "_n";
+                posnomfunc[b] += stsum;
             }
 
             if (Number.isInteger(tp)) {

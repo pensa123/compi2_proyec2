@@ -67,24 +67,34 @@ class Declaracion extends Nodo {
             return "";
         }
         var n = this.hijos[1].traducir(ts);
+
         if (n == null) { return ""; }
         if (n.tipo <= 3) {
-            if (n.tipo != this.tipo) {
-
+            if (n.tipo != this.tipo[0]) {
                 if (!compImplicito(this.tipo, n.tipo)) {
-                    return this.niuerror("No se puede asignar un " + getTipo(n.tipo) + " a un " + getTipo(this.tipo));
+                    return this.niuerror("No se puede asignar un " + getTipo(n.tipo) + " a un " + getTipo(this.tipo[0]));
                 }
-
             }
         } else if (n.tipo == vtipo.string) {
             if (this.tipo != vtipo.string) {
                 return this.niuerror("Una cadena debe de ser ingresada a un Stirng");
             }
         } else {
-            print("Falta traducir de " + v_prim[n.valor]);
-            return "";
+            return this.niuerror("No se puede asignar un " + getTipo(n.tipo) + " a un " + getTipo(this.tipo[0]));
         }
 
+        if (this.tipo.length == 2) {
+            if (typeof n.esarr == "undefined") {
+                print(n);
+                return this.niuerror("No se puede asignar un valor normal a un arreglo.");
+            }
+        }
+
+        if (typeof n.esarr != "undefined" && n.esarr) {
+            if (this.tipo.length == 1) {
+                return this.niuerror("No se le puede asignar un arreglo a una variable no arreglo.");
+            }
+        }
 
         var st = n.cadena;
         if (typeof n.etV != "undefined") {
@@ -194,11 +204,11 @@ class Dect2_4 extends Nodo {
 
         nvar.nombre = this.id;
         nvar.tipo = null;
-        nvar.esArreglo = this.tipo.length == 2;
+        nvar.esArreglo = false;
         nvar.declaracionFila = this.fila;
         nvar.declaracionColumna = this.columna;
         nvar.a = 0;
-        nvar.tvar = vddi.var; //var , const , global 
+        nvar.tvar = this.tipo; //var , const , global 
         if (this.tipo == vddi.global) {
             if (!tglobal.agregarVar(nvar)) {
                 this.niuerror("No se puede agregar variables con el mismo nombre " + nvar.nombre);
@@ -229,16 +239,20 @@ class Dect2_4 extends Nodo {
 
         nvar.tipo = n.tipo;
 
+        if (typeof n.esarr != "undefined") {
+            nvar.esArreglo = true;
+        }
+
         if (nvar.refHeap) {
             st += "Heap[" + nvar.ref + "] = " + n.valor + ";\n";
         } else {
             var t = salto_temp.nextTemp();
-            st += t + " = p + " + ref;
+            st += t + " = p + " + nvar.ref;
             st += "Stack[" + t + "] =  " + n.valor + ";\n";
         }
 
-        nvar.declarada = true; 
-        nvar.instanciada = true; 
+        nvar.declarada = true;
+        nvar.instanciada = true;
         return st;
     }
 
@@ -401,18 +415,35 @@ class Asignacion extends Nodo {
             return null;
         }
         var n2 = this.hijos[1].traducir(ts);
+        if (n2 == null) {
+            return null;
+        }
+
+
+
         if (n2.tipo <= 3) {
             if (n2.tipo != n1.tipo) {
-                print("Comparar casteo implicito o marcar error " + n2.tipo + " " + n1.tipo);
+                if (!compImplicito(n1.tipo, n2.tipo)) {
+                    return this.niuerror("No se puede asignar un " + getTipo(n2.tipo) + " a un " + getTipo(n1.tipo));
+                }
             }
         } else if (n2.tipo == vtipo.string) {
             if (n1.tipo != vtipo.string) {
                 return this.niuerror("Una cadena debe de ser ingresada a un Stirng");
             }
         } else {
-            print("Falta traducir de " + v_prim[n2.valor]);
-            return null;
+            return this.niuerror("No se puede asignar un " + getTipo(n2.tipo) + " a un " + getTipo(n1.tipo));
         }
+        if (n1.esarr) {
+            if (typeof n2.esarr == "undefined") {
+                return this.niuerror("No se puede asignar un valor normal a un arreglo.");
+            }
+        } else {
+            if (typeof n2.esarr != "undefined" && n2.esarr) {
+                return this.niuerror("No se puede asignar un arreglo a una variable de una posicion");
+            }
+        }
+
 
         var st = "";
         st += n1.cadena;
@@ -430,6 +461,7 @@ class Asignacion extends Nodo {
             n2.valor = nt;
         }
         st += n1.valor + "= " + n2.valor + ";\n";
+        print(st);
 
         if (typeof n1.nvar != "undefined") {
             var mivar = n1.nvar;
@@ -459,13 +491,127 @@ class Id extends Nodo {
         var val = "";
         if (nvar.refHeap) {
             val = "Heap[" + nvar.ref + "]";
-            return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
+            if (typeof this.exp != "undefined") {
+                if (this.exp) {
+                    var t = salto_temp.nextTemp();
+                    st += t + "= Heap[" + nvar.ref + "];\n";
+                    val = t;
+                }
+            }
+            return { valor: val, tipo: nvar.tipo, cadena: st, esarr: nvar.esArreglo, var: nvar };
         } else {
             var tn = salto_temp.nextTemp();
             st += tn + " = p + " + nvar.ref + ";\n";
             val = "Stack[" + tn + "]";
-            return { valor: val, tipo: nvar.tipo, cadena: st, var: nvar };
+            if (typeof this.exp != "undefined") {
+                if (this.exp) {
+                    var t = salto_temp.nextTemp();
+                    st += t + " = Stack[" + tn + "];\n";
+                    val = t;
+                }
+            }
+            return { valor: val, tipo: nvar.tipo, cadena: st, esarr: nvar.esArreglo, var: nvar };
         }
+    }
+}
+
+
+class laccesos extends Nodo {
+    traducir(ts) {
+        var aux = null;
+        var esVar = false;
+        //        print(this.hijos);
+
+        var st = "";
+        var n = this.hijos[0].traducir(ts);
+        if (n == null) {
+            return null;
+        }
+        st += n.cadena;
+        aux = n;
+        esVar = true;
+
+        print(this);
+
+        for (var a = 1; a < this.hijos.length; a++) {
+            if (this.hijos[a] instanceof Id) {
+                if (this.hijos[a].id.toLowerCase() == "length") {
+                    if (esVar && aux.esarr) {
+                        if (a + 1 == this.hijos.length) {
+                            var t = salto_temp.nextTemp();
+                            st += t + " = " + aux.valor + ";\n";
+                            st += t + " = Heap[" + t + "];\n";
+
+                            return { valor: t, tipo: vtipo.integer, cadena: st };
+                        } else {
+                            return this.hijos[a + 1].niuerror("no se puede hacer un acceso a un valor numerico.");
+                        }
+                    }
+                }
+            }
+            if (this.hijos[a] instanceof AccesoArr) {
+                var n = this.hijos[a].traducir(ts);
+                if (n == null) {
+                    return null;
+                }
+                st += n.cadena;
+
+                if (!esVar) {
+                    return this.hijos[a].niuerror("No se puede hacer un acceso a arreglo a algo que no es una variable.");
+                }
+                if (!aux.esarr) {
+                    return this.hijos[a].niuerror("No se puede hacer un acceso a arreglo a " + aux.nombre + " ya que esta variable no es un arreglo.");
+                }
+
+                var t = salto_temp.nextTemp();
+                st += t + " = " + aux.valor + ";\n";
+                st += "t2 = Heap[" + t + "];  ## Para comparar si esta en el rango.\n";
+                st += "t1 = " + n.valor + ";\n";
+                st += "call compIndiceArr;\n";
+                st += t + " = " + t + " + " + n.valor + ";\n";
+                st += t + " = " + t + " + 1;\n";
+
+                if (typeof this.exp == "undefined") {
+                    if (a + 1 == this.hijos.length) {
+                        print("si entra aqui yqlgputa");
+                        return { valor: "Heap[" + t + "]", tipo: aux.tipo, cadena: st };
+                    }
+                }
+                st += t + " = Heap[" + t + "];\n";
+
+                if (isNaN(aux.tipo)) {
+                    print("Se debe de hacer algo distinto ya que es una escturcuta jejejee.");
+                }
+
+                aux = { valor: t, tipo: aux.tipo, cadena: st };
+                esVar = false;
+
+            }
+
+        }
+
+        return aux;
+    }
+}
+
+
+class accesofunc extends Nodo {
+    dibujar(c) {
+        c.hojas++;
+        return { name: this.id };
+    }
+}
+
+class AccesoArr extends Nodo {
+    traducir(ts) {
+        var n = this.hijos[0].traducir(ts);
+        if (!compImplicito(vtipo.integer, n.tipo)) {
+            return this.niuerror("En acceso a arreglos, solo se esperan enteros. " + getTipo(n.tipo) + " no esta permitido.");
+        }
+        if (n.esarr) {
+            return this.niuerror("En acceso a arreglos no se aceptan arreglos.");
+        }
+        return n;
     }
 }
 

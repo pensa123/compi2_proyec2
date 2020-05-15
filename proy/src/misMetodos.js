@@ -198,7 +198,19 @@ misFuncs.appendData('        h = h + 1;\n');
 misFuncs.appendData('    L26: \n');
 misFuncs.appendData('end \n\n');
 
-//continuamos en t18  Y L27
+
+misFuncs.appendData('proc compIndiceArr begin\n'); 
+misFuncs.appendData('    t3 = 1; \n'); 
+misFuncs.appendData('    if(t1 < 0) goto L27; \n'); 
+misFuncs.appendData('    if(t1 >= t2) goto L27;\n'); 
+misFuncs.appendData('    goto L28; \n'); 
+misFuncs.appendData('    L27: \n'); 
+misFuncs.appendData('        E = 2;\n'); 
+misFuncs.appendData('        t3 = 0; \n'); 
+misFuncs.appendData('    L28: \n'); 
+misFuncs.appendData('end\n'); 
+
+//continuamos en t18  Y L29
 
 
 
@@ -206,7 +218,7 @@ misFuncs.appendData('end \n\n');
 class temp_salto {
     constructor() {
         this.nt = 18;
-        this.ns = 27;
+        this.ns = 29;
     }
 
     nextTemp() {

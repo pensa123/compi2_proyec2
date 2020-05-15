@@ -90,6 +90,7 @@
 "^"					return 'XOR';
 "!"					return 'NOT';
 ":"					return 'DOSPTS';
+"."					return 'PUNTO';
 
 ["\""](("\\""\"")|[^"\""])*["\""]	{ yytext = yytext.substr(1,yyleng-2); yytext = replaceCadena(yytext);  return 'CADENA'; }
 \'[^\'']\'          	{ yytext = yytext.substr(1,yyleng-2); return 'CHAR'; } 
@@ -98,7 +99,7 @@
 [0-9]+\b				return 'ENTERO';
 
 
-([a-zA-Z0-9_.-])+(."j") return "ARCHIVO";
+([a-zA-Z0-9_.-])+(".j") return "ARCHIVO";
 ([a-zA-Z])[a-zA-Z0-9_]*	return 'IDENTIFICADOR';
 
 
@@ -127,7 +128,7 @@
 %left 'POTENCIA' 
 %right UMENOS , NOT
 %left APAR , CPAR
-%left  integer
+%left  ACORCH , CCORCH 
 
 %start ini
 
@@ -200,7 +201,7 @@ instruccion_f :  declaracion fin {$$ = $1; }
 				| switch {$$ = $1; }
 				| transferencia {$$ = $1; }
 				| cases {$$ = $1; }
-				| asignacion{$$ = $1; } 
+				| asignacion fin{$$ = $1; } 
 				| ciclos {$$ = $1}
 				| llamadaMetodo fin {$$ = $1; $$.exp = false; }
 				| fprint fin {$$ = $1}
@@ -244,17 +245,75 @@ sparam : exp { $$ = new SParam(this._$.first_line,this._$.first_column); $$.hijo
 	| DOLAR exp {$$ = new SParam(this._$.first_line,this._$.first_column); $$.hijos.push($2); $$.ref = true; };
 
 
-asignacion : IDENTIFICADOR IGUAL exp fin {
-		$$ = new Asignacion(this._$.first_line,this._$.first_column);
-		var n = new Id(this._$.first_line,this._$.first_column);
+asignacion : IDENTIFICADOR  IGUAL pvalor  {
+		$$ = new Asignacion(@1.first_line,@1.first_column);
+		var n = new Id(@1.first_line, @1.first_column);
 		n.id = $1; 
 		$$.hijos.push(n) ; 
 		$$.hijos.push($3); 
 		 } 
 		|
-		IDENTIFICADOR ACORCH exp CCORCH IGUAL exp fin ;
+		otro IGUAL pvalor {
+			$$ = new Asignacion(@1.first_line , @1.first_column); 
+			var n = new laccesos(@2.first_line , @2.first_column);
+			n.hijos = $1; 
+			$$.hijos.push(n); 
+			$$.hijos.push($3); 			
+		} ;
+otro :  otro PUNTO otro2 {  
+			$$ = $1; 
+			for(var a = 0; a < $3.length; a++){
+				$$.push($3[a]); 
+			}
+		}
+		| otrofin {$$ = $1;}; 
+
+otro2 : IDENTIFICADOR ACORCH exp CCORCH {
+	var n  = new  AccesoArr(@2.first_line , @2.first_column); 
+	var n2 = new Id(@1.first_line, @1.first_column);
+	n2.id = $1; 
+	n.hijos.push($3); 
+	$$ = [n2 , n];
+	}
+	|
+	IDENTIFICADOR {
+		var n = new Id(@1.first_line , @1.first_column);
+		n.id = $1; 
+		$$= [n]; 	
+	}
+	|
+	IDENTIFICADOR APAR CPAR{
+		var n = new accesofunc(@1.first_line , @1.first_column);
+		n.id = $1; 
+		$$= [n];
+	}
+	; 
 
 
+otrofin : IDENTIFICADOR ACORCH exp CCORCH {
+	var n  = new  AccesoArr(@2.first_line , @2.first_column); 
+	var n2 = new Id(@1.first_line, @1.first_column);
+	n2.id = $1; 
+	n.hijos.push($3); 
+	$$ = [n2 , n];
+	}
+	|
+	IDENTIFICADOR PUNTO IDENTIFICADOR{
+		var n = new Id(@1.first_line , @1.first_column);
+		n.id = $1; 
+		var n2 = new Id(@3.first_line , @3.first_column);
+		n2.id = $3; 
+		$$ = [n , n2];
+	}
+	|
+	IDENTIFICADOR PUNTO IDENTIFICADOR APAR CPAR{
+		var n = new Id(@1.first_line , @1.first_column);
+		n.id = $1; 
+		var n2 = new accesofunc(@3.first_line , @3.first_column);
+		n2.id = $3; 
+		$$ = [n , n2];
+	}
+	; 
 
 ciclos:  RWHILE APAR exp CPAR ALLAVE instrucciones_fun CLLAVE {
 			$$ = new While(this._$.first_line,this._$.first_column);
@@ -374,8 +433,8 @@ arrvalue : ALLAVE listavarr CLLAVE { $$ = new arr_content(@1.first_line , @1.fir
  listavarr : listavarr COMA elemarr {$$ = $1; $$.push($3); }
 		| elemarr {$$ = []; $$.push($1); } ; 
 
-elemarr : arrvalue {$$ = $1; }
-		| exp  {$$ = $1; }; 
+elemarr : /*arrvalue {$$ = $1; }
+		| */ exp  {$$ = $1; }; 
 
 tipo :tp  {$$ = [$1];}
 	| tp ACORCH CCORCH {$$ = [$1, 0]; }
@@ -440,14 +499,15 @@ exp
 	| CADENA                	{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.string; $$.valor = $1;  			}
 	| CHAR                		{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.char; $$.valor = $1;  			}
 
-	| IDENTIFICADOR				{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.id; $$.valor = $1; }
+	| IDENTIFICADOR				{ $$ = new Id(this._$.first_line,this._$.first_column); $$.id = $1; $$.exp = true;  }
+	| otro                      { var n = new laccesos(@1.first_line , @1.first_column); n.hijos = $1; $$ = n; $$.exp = true; }
+
 
 	| inc_dec 					{$$ = $1; $$.retValor = true; }
 	| llamadaMetodo				{$$ = $1; $$.exp = true;  }
 
 	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
 	| APAR RCHAR CPAR exp 		{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.char; $$.hijos.push($4);}
-
 
 ;
 

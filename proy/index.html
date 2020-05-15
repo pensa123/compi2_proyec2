@@ -38,8 +38,13 @@
 
 
 
+  <script src="./src/a3d/todo3d.js"></script>
+
+
+
 
   <script src="./src/gramaticas/jsharp.js"></script>
+  <script src="./src/gramaticas/c3d.js"></script>
 
 
 
@@ -177,24 +182,34 @@
     <div class="container">
       <div class="btn-group" role="group" aria-label="Basic example">
         <button type="button" class="btn btn-info" onmousedown="nPestania()">Nueva pestaña</button>
-        <button type="button" class="btn btn-warning" onclick="eliminarpestania()">Cerrar pestaña</button>
+        <button type="button" class="btn btn-warning" onclick="eliminarpestania()" style="color: white;">Cerrar
+          pestaña</button>
 
-        <a href="#consMenu">
-          <button type="button" class="btn btn-success" onclick="traducir()">Traducir</button>
+        <a href="#consMenu" class="btn btn-success" onclick="traducir()" style="color: white;">
+          Traducir
         </a>
 
-        <a href="#consMenu">
-          <button type="button" class="btn btn-info" onclick="dibujar()">Ver AST</button>
+        <a href="#consMenu" class="btn btn-info" onclick="dibujar()" style="color: white;">
+          Ver AST
         </a>
 
 
-        <a href="#consMenu" class="btn btn-warning" onclick="gtsvar()">
+        <a href="#consMenu" class="btn btn-warning" onclick="gtsvar()" style="color: white;">
           TS Variables
         </a>
 
 
-        <a href="#consMenu" class="btn btn-success" onclick="gtsfunc()">
+        <a href="#consMenu" class="btn btn-success" onclick="gtsfunc()" style="color: white;">
           TS Funciones
+        </a>
+
+
+        <a href="#consMenu" class="btn btn-info" onclick="optimizar()" style="color: white;">
+          Optimizar
+        </a>
+
+        <a href="#consMenu" class="btn btn-warning" onclick="grop()" style="color: white;">
+          Reporte de optimizacion
         </a>
 
         <a href="#showError" id="btnSerror" style="visibility: hidden;">
@@ -221,6 +236,9 @@
             aria-controls="nav-profile" aria-selected="false">Variables</a>
           <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#tsFunc" role="tab"
             aria-controls="nav-profile" aria-selected="false">Funciones</a>
+
+          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#ropt" role="tab"
+            aria-controls="nav-profile" aria-selected="false">Optimizacion</a>
 
 
         </div>
@@ -249,6 +267,7 @@
                     <th scope="col">Ambito</th>
                     <th scope="col">Nombre</th>
                     <th scope="col">Tipo</th>
+                    <th scope="col">Tipo var</th>
                     <th scope="col">Es arreglo</th>
                     <th scope="col">Referencia</th>
                     <th scope="col">Declarada en</th>
@@ -292,9 +311,41 @@
           </div>
 
         </div>
+
+        <div class="tab-pane fade" id="ropt" role="tabpanel" aria-labelledby="nav-contact-tab">
+
+          <div style="border-color: lightblue; border-style:double;" class="table-responsive">
+            <table class="table">
+
+              <table class="table">
+                <thead class="thead-light">
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Regla de optimizacion</th>
+                    <th scope="col">fila</th>
+                    <th scope="col">columna</th>
+                    <th scope="col">Entrada</th>
+                    <th scope="col">Salida</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyOpt">
+                  <td colspan="4">No se ha generado reporte de optimizacion.</td>
+                </tbody>
+              </table>
+            </table>
+
+          </div>
+
+        </div>
       </div>
       <br />
-      <a href="#eltitle"> <button class="btn btn-info">Subir</button> </a>
+      <div class="btn-group" role="group" aria-label="Basic example">
+
+
+        <a href="#eltitle" style="color: white;" class="btn btn-info">Subir </a>
+        <a href="#eltitle" onclick="copyToPest()" style="color: white;" class="btn btn-warning">Pasar a pestaña</a>
+
+      </div>
     </div> <!-- /container -->
 
 
@@ -378,9 +429,14 @@
     var tglobal = null;
     var raiz = "F";
     var nerr = 0;
-
+    var arr3d = null;
+    var arropt3d = null;
     tabs.push(1);
     tabs2.push(1);
+
+
+
+
 
     function pestaniaactual(n) {
       pactual = n;
@@ -481,6 +537,16 @@
       });
     }
 
+    function opti(input) {
+      try {
+        raiz = c3d.parse(input);
+        return true;
+      } catch (error) {
+        err = error.message;
+        nerror(err);
+        return false;
+      }
+    }
 
     var err = "";
     function parse(input) {
@@ -516,6 +582,61 @@
       return string.split(search).join(replace);
     }
 
+
+    function copyToPest() {
+      if (pactual == null) {
+        alert("No estas en ninguna pestaña.");
+        return;
+      }
+      agregarcosas();
+      if (mirrorTab["tarea" + pactual]) {
+        var texto = consola.getValue();
+        mirrorTab["tarea" + pactual].setValue(texto);
+      } else {
+        alert("Por favor tocar el text area, cuando tenga numeros a la izquierda es que esta listo.");
+      }
+    }
+
+
+    function optimizar() {
+      arr3d = [];
+      arropt3d = [];
+      document.getElementById("btnSerror").style.visibility = "Hidden";
+      document.getElementById("showError").style.visibility = "Hidden";
+      if (pactual == null) {
+        alert("No estas en ninguna pestaña.");
+        return;
+      }
+      agregarcosas();
+      if (mirrorTab["tarea" + pactual]) {
+
+        var texto = mirrorTab["tarea" + pactual].getValue();
+        print(texto);
+        print("------------------");
+        terror = document.createTextNode("");
+
+        if (!opti(texto)) {
+          cerror.setValue(terror.textContent);
+          document.getElementById("showError").style.visibility = "visible";
+          document.getElementById("btnSerror").style.visibility = "visible";
+          return;
+        }
+        var txt = document.createTextNode("");
+
+        for (var a = 0; a < arr3d.length; a++) {
+          var n = arr3d[a].opt3d();
+          if (n == null || n == "") {
+            continue;
+          }
+          txt.appendData(n);
+        }
+        consola.setValue(txt.textContent);
+      } else {
+        alert("Por favor tocar el text area, cuando tenga numeros a la izquierda es que esta listo.");
+      }
+
+
+    }
 
     function traducir() {
       $('#consMenu a[href="#nav-home"]').tab('show');
@@ -608,6 +729,8 @@
           document.getElementById("showError").style.visibility = "visible";
           document.getElementById("btnSerror").style.visibility = "visible";
         }
+      } else {
+        alert("Por favor tocar el text area, cuando tenga numeros a la izquierda es que esta listo.");
       }
 
     }
@@ -627,6 +750,7 @@
       console.log(st);
     }
 
+
     function nerror(st) {
       print(st);
       if (nerr == 0) {
@@ -636,6 +760,31 @@
       }
       nerr++;
       return null;
+    }
+
+    function grop() {
+      if (arropt3d == null) {
+        alert("Debes de optimizar antes para realizar el reporte de optimizacion");
+      }
+
+      var mitr = document.getElementById("tbodyOpt");
+      var txt = document.createTextNode("");
+
+      for (var a = 0; a < arropt3d.length; a++) {
+        var opt = arropt3d[a];
+        txt.appendData('<tr>\n');
+        txt.appendData('	<th scope="row">' + (a + 1) + '</th>\n');
+        txt.appendData('	<td>' + opt.regla + '</td>\n');
+        txt.appendData('	<td>' + opt.fila + '</td>\n');
+        txt.appendData('	<td>' + opt.columna + '</td>\n');
+        txt.appendData('	<td>' + opt.entrada + '</td>\n');
+        txt.appendData('	<td>' + opt.salida + '</td>\n');
+        txt.appendData('</tr>\n');
+      }
+
+      $('#consMenu a[href="#ropt"]').tab('show');
+      mitr.innerHTML = txt.textContent;
+
     }
 
     function gtsfunc() {
@@ -695,6 +844,7 @@
         txt.appendData('	<td>' + vr.ambito + '</td>\n');
         txt.appendData('	<td>' + vr.nombre + '</td>\n');
         txt.appendData('	<td>' + (isNaN(vr.tipo) ? vr.tipo : v_tipo[vr.tipo]) + '</td>\n');
+        txt.appendData('	<td>' + (v_ddi[vr.tvar]) + '</td>\n');
         txt.appendData('	<td>' + (vr.esArreglo ? "Si" : "No") + '</td>\n');
         txt.appendData('	<td>' + (vr.refHeap ? vr.ref : "p + " + vr.ref) + '</td>\n');
         txt.appendData('	<td>Fila ' + vr.declaracionFila + ', Columna ' + vr.declaracionColumna + '</td>\n');

@@ -7,6 +7,18 @@ class Nodo {
     console.log("nuevo nodo " + this.constructor.name + " " + fila + " , " + columna);
   }
 
+  opt3d() {
+    print("Falta realizar la optimizacion de: " + this.constructor.name + " :'(");
+    print(this);
+    print(this.hijos);
+  }
+
+  niuoptim(regla, entrada, salida) {
+    var obj = { regla: "Regla " + regla, fila: this.fila, columna: this.columna, entrada: entrada, salida: salida };
+    arropt3d.push(obj);
+    return salida;
+  }
+
   niuerror(st) {
     return nerror("Fila:" + this.fila + " Columna:" + this.columna + ", " + st);
   }
