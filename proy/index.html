@@ -109,6 +109,50 @@
 
 
 
+  <script>
+
+    function processFiles(files) {
+      var file = files[0];
+
+      var reader = new FileReader();
+
+      reader.onload = function (e) {
+        // Cuando éste evento se dispara, los datos están ya disponibles.
+        // Se trata de copiarlos a una área <div> en la página.
+        //console.log(e.target.result);
+
+
+        //modaqui.
+        agregarcosas();
+
+
+        if (mirrorTab["tarea" + pactual]) {
+          mirrorTab["tarea" + pactual].setValue(e.target.result);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+
+    function doDownload() {
+      if (!mirrorTab["tarea" + pactual]) {
+        alert("No esta seleccionada ninguna pestaña");
+        return;
+      }
+      function dataUrl(data) {
+        return "data:x-application/xml;charset=utf-8," + escape(data);
+      }
+      var downloadLink = document.createElement("a");
+      downloadLink.href = dataUrl(mirrorTab["tarea" + pactual].getValue());
+      downloadLink.download = "Archivo_" + pactual + ".j";
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
+  </script>
+
   <!-- Custom styles for this template -->
 </head>
 
@@ -122,22 +166,14 @@
 
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-        </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true"
-            aria-expanded="false">Dropdown</a>
+            aria-expanded="false">Acciones de archivos</a>
           <div class="dropdown-menu" aria-labelledby="dropdown01">
-            <a class="dropdown-item" href="#">Action</a>
-            <a class="dropdown-item" href="#">Another action</a>
-            <a class="dropdown-item" href="#">Something else here</a>
+            <input onclick="nPestania()" class="dropdown-item" id="fileInput" type="file" size="50"
+              onchange="processFiles(this.files)">
+            <a class="dropdown-item" href="#" onclick="doDownload()">Guardar</a>
+            <a class="dropdown-item" href="#">Guardar Como</a>
           </div>
         </li>
       </ul>
@@ -212,7 +248,12 @@
           Reporte de optimizacion
         </a>
 
-        <a href="#showError" id="btnSerror" style="visibility: hidden;">
+
+        <a href="#consMenu" class="btn btn-success" onclick="opBloque()" style="color: white;">
+          Optimizar por bloques
+        </a>
+
+        <a href="#showError" id="btnSerror" style="visibility: hidden;" onclick="repError()">
           <button type="button" class="btn btn-danger">Ver errores</button>
         </a>
       </div>
@@ -239,6 +280,14 @@
 
           <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#ropt" role="tab"
             aria-controls="nav-profile" aria-selected="false">Optimizacion</a>
+
+
+          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#dbloques" role="tab"
+            aria-controls="nav-profile" aria-selected="false">Diagrama de bloques</a>
+
+
+          <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#terror" role="tab"
+            aria-controls="nav-profile" aria-selected="false">Tabla de errores</a>
 
 
         </div>
@@ -337,6 +386,43 @@
           </div>
 
         </div>
+
+        <div class="tab-pane fade" id="dbloques" role="tabpanel" aria-labelledby="nav-contact-tab">
+          <textarea class="form-control" id="txtdbloques" rows="10"></textarea>
+          <p>
+            <a href="https://dreampuf.github.io/GraphvizOnline/" target="_blanck">Graphviz online.</a>
+            Perdon no supe como usar graphviz con javascript</p>
+        </div>
+
+
+        <div class="tab-pane fade" id="terror" role="tabpanel" aria-labelledby="nav-contact-tab">
+
+          <div style="border-color: lightcoral; border-style:double;" class="table-responsive">
+            <table class="table">
+
+              <table class="table">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">fila</th>
+                    <th scope="col">columna</th>
+                    <th scope="col">Descripcion</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyError">
+                  <tr>
+                    <td colspan="4">No se ha generado reporte de errores.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </table>
+
+          </div>
+
+        </div>
+
+
       </div>
       <br />
       <div class="btn-group" role="group" aria-label="Basic example">
@@ -378,7 +464,7 @@
     var t2 = document.getElementById("t2");
     var li2 = document.getElementById("li2");
     var altura = 6;
-
+    var arrErr = null;
 
     var tvar = null;
     var salto_temp = null;
@@ -434,6 +520,7 @@
     tabs.push(1);
     tabs2.push(1);
 
+    var dbloques = { bloque: [], nbloque: [] };
 
 
 
@@ -597,9 +684,144 @@
       }
     }
 
+    function opBloque() {
+      $('#consMenu a[href="#dbloques"]').tab('show');
+      arr3d = [];
+      arrErr = [];
+      arropt3d = [];
+      document.getElementById("btnSerror").style.visibility = "Hidden";
+      document.getElementById("showError").style.visibility = "Hidden";
+      if (pactual == null) {
+        alert("No estas en ninguna pestaña.");
+        return;
+      }
+      agregarcosas();
+      if (mirrorTab["tarea" + pactual]) {
+        var texto = mirrorTab["tarea" + pactual].getValue();
+        print(texto);
+        print("------------------");
+        terror = document.createTextNode("");
+        optim = false;
+        if (!opti(texto)) {
+          cerror.setValue(terror.textContent);
+          document.getElementById("showError").style.visibility = "visible";
+          document.getElementById("btnSerror").style.visibility = "visible";
+          return;
+        }
+        var txt = document.createTextNode("");
+
+        var etiquetas = [];
+        var netiquetas = [];
+        var funciones = [];
+        var nfuncciones = [];
+
+        var st = "digraph G {\n";
+        for (var a = 0; a < arr3d.length; a++) {
+          var aux = arr3d[a];
+          var n = aux.opt3d();
+          n = replaceAll(n, "\"", "\\\"");
+          if (n == null || n == "") { continue; }
+          txt.appendData(n);
+          n = replaceAll(n, "\n", "");
+          st += '\ta' + a + ' [label = "' + n + '", style=filled,color=white];\n';
+
+          if (arr3d[a] instanceof etiqueta3d) {
+            etiquetas.push(arr3d[a].id);
+            netiquetas.push(a);
+          } else if (arr3d[a] instanceof decfunc3d) {
+            funciones.push(arr3d[a].id);
+            nfuncciones.push(a);
+          }
+        }
+        var nCloster = 0;
+        var stCuerpoFuera = "";
+        st += '\tsubgraph cluster_' + nCloster++ + ' {\n' +
+          '\t\tstyle=filled;\n' +
+          '\t\tcolor=lightgrey;\n' +
+          '\t\tlabel = "Inicio";\n';
+
+        for (var a = 0; a < arr3d.length; a++) {
+          if (arr3d[a] instanceof llamadafunc3d) {
+            print("---------------------------------------");
+            print(arr3d[a]);
+            var nn = funciones.indexOf(arr3d[a].id);
+            print(nn);
+            print("_----");
+            if (nn != -1) {
+              stCuerpoFuera += "\ta" + a + "-> a" + nfuncciones[nn] + ";\n";
+            }
+          }
+
+          if (arr3d[a] instanceof etiqueta3d) {
+            st += "\t}\n";
+            if (!(arr3d[a - 1] instanceof etiqueta3d)) {
+              st += "\t\ta" + (a - 1) + " -> a" + (a) + ";\n";
+            }
+            st += '\tsubgraph cluster_' + nCloster++ + ' {\n' +
+              '\t\tstyle=filled;\n' +
+              '\t\tcolor=lightgrey;\n' +
+              '\t\tlabel = "' + arr3d[a].id + '";\n';
+            if (arr3d[a + 1] instanceof etiqueta3d) { st += "a" + a + ";\n"; continue; }
+            if (a != arr3d.length - 1) {
+              st += "\t\ta" + a + " -> a" + (a + 1) + ";\n";
+            } else {
+              st += "\t\ta" + a + ";\n";
+            }
+          } else if (arr3d[a] instanceof saltos3d) {
+            if (arr3d[a].hijos.length == 2) {
+              var nn = etiquetas.indexOf(arr3d[a].hijos[1]);
+              if (nn != -1) {
+                stCuerpoFuera += "\t\ta" + a + "-> a" + netiquetas[nn] + ";\n";
+              }
+              if (a != arr3d.length - 1) {
+                if (arr3d[a + 1] instanceof etiqueta3d) { continue; }
+                st += "\ta" + a + " -> a" + (a + 1) + ";\n";
+              }
+            } else {
+              st += "\t}\n";
+
+              var nn = etiquetas.indexOf(arr3d[a].hijos[0]);
+              if (nn != -1) {
+                st += "\ta" + a + " -> a" + netiquetas[nn] + ";\n";
+              }
+              st += '\tsubgraph cluster_' + nCloster++ + ' {\n' +
+                '\t\tstyle=filled;\n' +
+                '\t\tcolor=lightgrey;\n' +
+                '\t\tlabel = "Puede ser codigo muerto";\n';
+            }
+          } else {
+            if (a != arr3d.length - 1) {
+              if (arr3d[a + 1] instanceof etiqueta3d) {
+                st += "\t\ta" + a + ";\n";
+                continue;
+              }
+              st += "\t\ta" + a + " -> a" + (a + 1) + ";\n";
+            }
+          }
+
+        }
+        print(etiquetas);
+        print(netiquetas);
+        print(funciones);
+        print(nfuncciones);
+
+
+        st += "\t}\n";
+        st += stCuerpoFuera;
+        st += "}";
+        document.getElementById("txtdbloques").value = st;
+        consola.setValue(txt.textContent);
+      } else {
+        alert("Por favor tocar el text area, cuando tenga numeros a la izquierda es que esta listo.");
+      }
+    }
+
+    var optim = null;
 
     function optimizar() {
+      $('#consMenu a[href="#nav-home"]').tab('show');
       arr3d = [];
+      arrErr = [];
       arropt3d = [];
       document.getElementById("btnSerror").style.visibility = "Hidden";
       document.getElementById("showError").style.visibility = "Hidden";
@@ -614,7 +836,7 @@
         print(texto);
         print("------------------");
         terror = document.createTextNode("");
-
+        optim = true;
         if (!opti(texto)) {
           cerror.setValue(terror.textContent);
           document.getElementById("showError").style.visibility = "visible";
@@ -622,14 +844,88 @@
           return;
         }
         var txt = document.createTextNode("");
+        var txtaux = document.createTextNode("");
+        var gentxt = true;
+        var dbloques = { bloque: [], nbloque: [] };
 
+        var saltosIn = [];
+        var auxSaltosIn = [];
+        var etiquetas = [];
+        //Esto es como la mirilla yqlg :D 
         for (var a = 0; a < arr3d.length; a++) {
-          var n = arr3d[a].opt3d();
-          if (n == null || n == "") {
-            continue;
+          var aux = arr3d[a];
+          var n = aux.opt3d();
+          if (n == null || n == "") { continue; }
+          if (aux instanceof saltos3d) {
+            if (aux.hijos.length == 2) {
+              var saltoCond = aux.hijos[1];
+              for (var b = a + 1; b < arr3d.length - 1; b++) {
+                if (arr3d[b] instanceof etiqueta3d) {
+                  if (arr3d[b].id == saltoCond) {
+                    if (arr3d[b + 1] instanceof saltos3d && arr3d[b + 1].hijos.length == 1) {
+                      var nsalto = arr3d[b + 1].hijos[0];
+                      var cviejo = n + "...\n " + nsalto + ":\ngoto " + nsalto + ";\n";
+                      cviejo = replaceAll(cviejo, "\n", "<br/>");
+                      n = replaceAll(n, saltoCond, nsalto);
+                      aux.niuoptim(7, cviejo, n);
+                    }
+                  }
+                }
+              }
+
+            } else {
+              var saltoCond = aux.hijos[0];
+              for (var b = a + 1; b < arr3d.length - 1; b++) {
+                if (arr3d[b] instanceof etiqueta3d) {
+                  if (arr3d[b].id == saltoCond) {
+                    if (arr3d[b + 1] instanceof saltos3d && arr3d[b + 1].hijos.length == 1) {
+                      var nsalto = arr3d[b + 1].hijos[0];
+                      var cviejo = n + "...\n " + nsalto + ":\ngoto " + nsalto + ";\n";
+                      cviejo = replaceAll(cviejo, "\n", "<br/>");
+                      n = replaceAll(n, saltoCond, nsalto);
+                      aux.niuoptim(6, cviejo, n);
+                    }
+                  }
+                }
+              }
+              if (!gentxt) {
+                txt.appendData(txtaux.textContent);
+                txtaux = document.createTextNode("");
+              }
+              gentxt = false;
+              auxSaltosIn.push(etiquetas.length);
+              saltosIn.push(aux.hijos[0]);
+            }
           }
-          txt.appendData(n);
+          if (aux instanceof etiqueta3d) {
+            etiquetas.push(aux.id);
+            if (saltosIn[saltosIn.length - 1] == aux.id) {
+              if (auxSaltosIn[auxSaltosIn.length - 1] == etiquetas.length - 1) {
+                gentxt = false;
+                txt.appendData(n);
+                var st = txtaux.textContent;
+                st = replaceAll(st + n, "\n", "<br/>");
+                aux.niuoptim(2, st, n);
+                txtaux = document.createTextNode("");
+                continue;
+              }
+            }
+            gentxt = false;
+            txt.appendData(txtaux.textContent);
+            txtaux = document.createTextNode("");
+
+          }
+          if (gentxt) {
+            txt.appendData(n);
+          } else {
+            txtaux.appendData(n);
+          }
         }
+
+        if (!gentxt) {
+          txt.appendData(txtaux.textContent);
+        }
+
         consola.setValue(txt.textContent);
       } else {
         alert("Por favor tocar el text area, cuando tenga numeros a la izquierda es que esta listo.");
@@ -641,6 +937,7 @@
     function traducir() {
       $('#consMenu a[href="#nav-home"]').tab('show');
 
+      arrErr = [];
       addToStack = [];
       document.getElementById("btnSerror").style.visibility = "Hidden";
       document.getElementById("showError").style.visibility = "Hidden";
@@ -751,6 +1048,13 @@
     }
 
 
+
+    function nerror2(fila, columna, tipo, texto) {
+      arrErr.push({ fila: fila, columna: columna, tipo: tipo, texto: texto });
+      nerror("[" + tipo + "] Error en Fila " + fila + ", columna " + columna + ": " + texto);
+      return null;
+    }
+
     function nerror(st) {
       print(st);
       if (nerr == 0) {
@@ -765,6 +1069,7 @@
     function grop() {
       if (arropt3d == null) {
         alert("Debes de optimizar antes para realizar el reporte de optimizacion");
+        return;
       }
 
       var mitr = document.getElementById("tbodyOpt");
@@ -785,6 +1090,34 @@
       $('#consMenu a[href="#ropt"]').tab('show');
       mitr.innerHTML = txt.textContent;
 
+    }
+
+
+    function repError() {
+      if (arrErr == null) {
+        alert("Debes de haber ejcecutado algun archivo para poder generar la tabla.");
+        return;
+      }
+      var mitr = document.getElementById("tbodyError");
+      var txt = document.createTextNode("");
+
+      //  arrErr.push({ fila: fila, columna: columna, tipo: tipo, texto: texto });
+      for (var a = 0; a < arrErr.length; a++) {
+
+        if (a % 2 == 0) {
+          txt.appendData('<tr class="table-danger">\n');
+        } else {
+          txt.appendData('<tr class="table-secondary">\n');
+        }
+        txt.appendData('	<th scope="row">' + (a + 1) + '</th>\n');
+        txt.appendData('	<td>' + arrErr[a].tipo + '</td>\n');
+        txt.appendData('	<td>' + arrErr[a].fila + '</td>\n');
+        txt.appendData('	<td>' + arrErr[a].columna + '</td>\n');
+        txt.appendData('	<td>' + arrErr[a].texto + '</td>\n');
+        txt.appendData('</tr>\n');
+      }
+      $('#consMenu a[href="#terror"]').tab('show');
+      mitr.innerHTML = txt.textContent;
     }
 
     function gtsfunc() {

@@ -36,6 +36,9 @@ class If extends Nodo {
             st += "goto " + s2 + ";\n";
             n.etV = [s1];
             n.etF = [s2];
+        } else {
+            n = mbatch(n);
+            st = n.cadena;
         }
         for (var a = 0; a < n.etV.length; a++) {
             st += n.etV[a] + ":\n";
@@ -74,6 +77,10 @@ class If extends Nodo {
 
 }
 
+class Try_catch extends Nodo {
+
+}
+
 class Switch extends Nodo {
 
     recorrer(bool, ts) {
@@ -91,6 +98,23 @@ class Switch extends Nodo {
         if (n1 == null) {
             return null;
         }
+
+        n1 = mbatch(n1);
+        if (typeof n1.etV != "undefined") {
+            var st = "";
+            var tr = salto_temp.nextTemp();
+            st = tr + " = 1;\n" + n1.cadena;
+            for (var a = 0; a < n1.etF.length; a++) {
+                st += n1.etF[a] + ":\n";
+            }
+            st += tr + " = 0;\n";
+            for (var a = 0; a < n1.etV.length; a++) {
+                st += n1.etV[a] + ":\n";
+            }
+            n1.cadena = st;
+            n1.valor = tr;
+        }
+
         var st = n1.cadena;
 
         var n2 = this.hijos[1].tradSwitch(this.ts, n1);

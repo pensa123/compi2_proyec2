@@ -10,10 +10,14 @@ class While extends Nodo {
     traducir(ts) {
         this.hijos[0].estaEnUnIf = true;
         var n = this.hijos[0].traducir(ts);
+        if (n == null) {
+            return;
+        }
         var st = "";
         var sinicio = salto_temp.nextSalto();
 
-        ts.sContinue = sinicio; 
+        n = mbatch(n);
+        ts.sContinue = sinicio;
         st += sinicio + ":\n";
         st += n.cadena;
         if (typeof n.etV == "undefined") {
@@ -26,11 +30,12 @@ class While extends Nodo {
         }
 
         var sfin = n.etF[0];
-        ts.sBreak = sfin; 
+        ts.sBreak = sfin;
         for (var a = 0; a < n.etV.length; a++) {
             st += n.etV[a] + ":\n";
         }
         var n2 = this.hijos[1].traducir(this.ts);
+        if (n2 == null) { return null; }
         st += n2.textContent;
         st += "goto " + sinicio + ";\n";
         for (var a = 0; a < n.etF.length; a++) {
@@ -53,15 +58,19 @@ class do_while extends Nodo {
         var sinicio = salto_temp.nextSalto();
         var st = sinicio + ":\n";
 
-        ts.sContinue = sinicio; 
+        ts.sContinue = sinicio;
+        var sfin = salto_temp.nextSalto();
+        ts.sBreak = sfin;
+
         var n2 = this.hijos[0].traducir(this.ts);
 
         st += n2.textContent;
 
         this.hijos[1].estaEnUnIf = true;
         var n = this.hijos[1].traducir(ts);
+        if (n == null) { return null; }
+        n = mbatch(n);
         st += n.cadena;
-
         if (typeof n.etV == "undefined") {
             var s1 = salto_temp.nextSalto();
             var s2 = salto_temp.nextSalto();
@@ -70,14 +79,12 @@ class do_while extends Nodo {
             n.etV = [s1];
             n.etF = [s2];
         }
-        var sfin = n.etF[0];
-        ts.sBreak = sfin; 
         for (var a = 0; a < n.etV.length; a++) {
             st += n.etV[a] + ":\n";
         }
 
         st += "goto " + sinicio + ";\n";
-
+        st += sfin + ":\n";
         for (var a = 0; a < n.etF.length; a++) {
             st += n.etF[a] + ":\n";
         }
@@ -114,6 +121,8 @@ class For extends Nodo {
         if (this.hijos[1] != null) {
             this.hijos[1].estaEnUnIf = true;
             var n = this.hijos[1].traducir(this.ts);
+            if (n == null) { return null; }
+            n = mbatch(n);
             st += n.cadena;
             if (typeof n.etV == "undefined") {
                 var s1 = salto_temp.nextSalto();

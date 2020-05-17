@@ -1,10 +1,11 @@
+var lastNodo = "";
 class Nodo {
   constructor(fila, columna) {
     this.fila = fila;
     this.columna = columna;
 
     this.hijos = [];
-    console.log("nuevo nodo " + this.constructor.name + " " + fila + " , " + columna);
+    lastNodo = ("ultimo nodo creado con exito " + this.constructor.name + " Fila: " + fila + " , Columna: " + columna);
   }
 
   opt3d() {
@@ -20,7 +21,8 @@ class Nodo {
   }
 
   niuerror(st) {
-    return nerror("Fila:" + this.fila + " Columna:" + this.columna + ", " + st);
+    //return nerror("Fila:" + this.fila + " Columna:" + this.columna + ", " + st);
+    return nerror2(this.fila, this.columna, "compilacion", st);
   }
 
   soy() {

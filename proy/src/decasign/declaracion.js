@@ -67,8 +67,8 @@ class Declaracion extends Nodo {
             return "";
         }
         var n = this.hijos[1].traducir(ts);
-
         if (n == null) { return ""; }
+        n = mbatch(n);
         if (n.tipo <= 3) {
             if (n.tipo != this.tipo[0]) {
                 if (!compImplicito(this.tipo, n.tipo)) {
@@ -76,7 +76,8 @@ class Declaracion extends Nodo {
                 }
             }
         } else if (n.tipo == vtipo.string) {
-            if (this.tipo != vtipo.string) {
+            if (this.tipo[0] != vtipo.string) {
+                print(this.tipo);
                 return this.niuerror("Una cadena debe de ser ingresada a un Stirng");
             }
         } else {
@@ -264,9 +265,7 @@ class decfunc extends Nodo {
     //inst las instrucciones (agregarlo al dibujar)
 
     traducir(ts) {
-        if (this.n3d == null) {
-            return "";
-        }
+        if (this.n3d == null) { return ""; }
 
         var st = "";
 
@@ -284,6 +283,16 @@ class decfunc extends Nodo {
 
     recorrer(bool, ts) {
         this.n3d = null;
+
+        var tid = this.id;
+        if (tid.toLowerCase() == "principal") {
+            if (this.hijos.length == 0) {
+                if (this.tipo[0] != vtipo.void) {
+                    return this.niuerror("El metodo principal sin parametros debe de ser tipo void.");
+                }
+            }
+        }
+
         var name = this.id;
         for (var a = 0; a < this.hijos.length; a++) {
             var tp = this.hijos[a].tipo;
@@ -419,7 +428,7 @@ class Asignacion extends Nodo {
             return null;
         }
 
-
+        n2 = mbatch(n2);
 
         if (n2.tipo <= 3) {
             if (n2.tipo != n1.tipo) {
@@ -461,10 +470,15 @@ class Asignacion extends Nodo {
             n2.valor = nt;
         }
         st += n1.valor + "= " + n2.valor + ";\n";
-        print(st);
 
-        if (typeof n1.nvar != "undefined") {
-            var mivar = n1.nvar;
+        
+        if (typeof n1.var != "undefined") {
+            var mivar = n1.var;
+            print(mivar); 
+            if (mivar.tvar == vddi.const) {
+                return this.niuerror("No se puede modificar la variable constante '" + mivar.nombre + "'");
+            }
+
             mivar.llamadaEn.push({ fila: this.fila, columna: this.columna });
             mivar.instanciada = true;
         }
@@ -498,6 +512,9 @@ class Id extends Nodo {
                     val = t;
                 }
             }
+            if (typeof this.estaEnUnIf != "undefined") {
+                val = t + " == 1";
+            }
             return { valor: val, tipo: nvar.tipo, cadena: st, esarr: nvar.esArreglo, var: nvar };
         } else {
             var tn = salto_temp.nextTemp();
@@ -509,6 +526,9 @@ class Id extends Nodo {
                     st += t + " = Stack[" + tn + "];\n";
                     val = t;
                 }
+            }
+            if (typeof this.estaEnUnIf != "undefined") {
+                val = t + " == 1";
             }
             return { valor: val, tipo: nvar.tipo, cadena: st, esarr: nvar.esArreglo, var: nvar };
         }
@@ -547,6 +567,78 @@ class laccesos extends Nodo {
                             return this.hijos[a + 1].niuerror("no se puede hacer un acceso a un valor numerico.");
                         }
                     }
+                } else {
+                    return this.niuerror(this.hijos[a].id + " no se reconoce como atributo.");
+                }
+            }
+            if (this.hijos[a] instanceof accesofunc) {
+                var func = this.hijos[a].id.toLowerCase();
+                if (func == "linealize") {
+                    if (aux.esarr) {
+                        if (a + 1 == this.hijos.length) {
+                            var t = salto_temp.nextTemp();
+                            st += t + " = h;\n";
+                            st += "t1 = " + aux.valor + ";\n";
+                            st += "t2 = Heap[t1];\n";
+                            st += "t2 = t2 + 1;\n";
+                            st += "call copyArrToStack;";
+                            return { valor: t, tipo: aux.tipo, cadena: st, esarr: true };
+                        } else {
+                            return this.hijos[a + 1].niuerror("No implementamos accesos a funciones :(");
+                        }
+                    }
+                } else if (func == "length") {
+                    if (aux.esarr) {
+                        return this.niuerror("length() no es una funcion para un arreglo.");
+                    }
+                    if (aux.tipo == vtipo.string) {
+                        var t = salto_temp.nextTemp();
+                        st += t + " = " + aux.valor + ";\n";
+                        st += "t1 = " + t + ";\n";
+                        st += "call stlength;\n";
+                        st += t + " = t2;\n";
+                        return { valor: t, tipo: vtipo.integer, cadena: st, esarr: false };
+                    } else {
+                        return this.niuerror("Length() es una funcion propia de los strings.");
+                    }
+                } else if (func == "tochararray") {
+                    if (aux.esarr) {
+                        return this.niuerror("tochararray() no es una funcion de un arreglo.");
+                    }
+                    if (aux.tipo == vtipo.string) {
+                        var t = salto_temp.nextTemp();
+                        st += t + " = " + aux.valor + ";\n";
+                        st += "t1 = " + t + ";\n";
+                        st += "call stlength;\n";
+                        st += t + " = h;\n";
+                        st += "heap[h] = t2;\n";
+                        st += "h = h + 1;\n";
+                        st += "t1 = " + aux.valor + ";\n";
+                        st += "call tocharArray;";
+
+                        return { valor: t, tipo: vtipo.char, cadena: st, esarr: true };
+                    } else {
+                        return this.niuerror("tochararray() es una funcion propia de los strings.");
+                    }
+                } else if (func == "tolowercase" || func == "touppercase") {
+                    if (aux.esarr) {
+                        return this.niuerror(func + "() no es una funcion de un arreglo");
+                    }
+                    if (aux.tipo == vtipo.string) {
+                        var t = salto_temp.nextTemp();
+                        st += "t1 = " + aux.valor + ";\n";
+                        st += t + " = h;\n";
+                        if (func == "touppercase") {
+                            st += "call touppercase;\n";
+                        } else {
+                            st += "call tolowercase;\n";
+                        }
+                        return { valor: t, tipo: vtipo.string, cadena: st, esarr: false };
+                    } else {
+                        return this.niuerror(func + "() es una funcion propia de los strings.");
+                    }
+                } else {
+                    return this.niuerror(this.hijos[a].id + " no se reconoce como funcion.");
                 }
             }
             if (this.hijos[a] instanceof AccesoArr) {
@@ -589,6 +681,10 @@ class laccesos extends Nodo {
             }
 
         }
+        if (typeof this.estaEnUnIf != "undefined") {
+            aux.valor = aux.valor + " == 1";
+        }
+
 
         return aux;
     }
@@ -630,4 +726,22 @@ function compImplicito(ti, td) {
         }
     }
     return (ti == vtipo.integer && td == vtipo.char);
+}
+
+function mbatch(n) {
+    if (typeof n.etV == "undefined") {
+        return n;
+    }
+    if (n.etV != "LT") {
+        return n;
+    }
+    var st = n.cadena;
+    var sTrue = salto_temp.nextSalto();
+    var sFalse = salto_temp.nextSalto();
+    st = replaceAll(st, "LT", sTrue);
+    st = replaceAll(st, "LF", sFalse);
+    n.cadena = st;
+    n.etV = [sTrue];
+    n.etF = [sFalse];
+    return n;
 }

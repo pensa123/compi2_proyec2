@@ -38,10 +38,30 @@ class Return extends Nodo {
             }
             return "goto " + ret.goto + ";\n";
         }
+        if (this.hijos.length == 0) {
+            return this.niuerror("No puedes retornar vacio en un " + getTipo(ret.tipo));
+        }
 
         var n = this.hijos[0].traducir(ts);
-
+        if (n == null) {
+            return n;
+        }
+        n = mbatch(n);
         var st = n.cadena;
+        if (typeof n.etV != "undefined") {
+            var tr = salto_temp.nextTemp();
+            st = tr + " = 1;\n" + n.cadena;
+            for (var a = 0; a < n.etF.length; a++) {
+                st += n.etF[a] + ":\n";
+            }
+            st += tr + " = 0;\n";
+            for (var a = 0; a < n.etV.length; a++) {
+                st += n.etV[a] + ":\n";
+            }
+            n.valor = tr;
+        }
+
+
 
         if (n.tipo != ret.tipo) {
             print("comparar tipos en Return :D ");
@@ -56,9 +76,26 @@ class Return extends Nodo {
 
 class Case extends Nodo {
     traducir(ts) {
-        var nn = this.hijos[0].traducir(ts);
-
-        return nn; 
+        var n = this.hijos[0].traducir(ts);
+        if (n == null) {
+            return null;
+        }
+        var st = "";
+        n = mbatch(n);
+        if (typeof n.etV != "undefined") {
+            var tr = salto_temp.nextTemp();
+            st = tr + " = 1;\n" + n.cadena;
+            for (var a = 0; a < n.etF.length; a++) {
+                st += n.etF[a] + ":\n";
+            }
+            st += tr + " = 0;\n";
+            for (var a = 0; a < n.etV.length; a++) {
+                st += n.etV[a] + ":\n";
+            }
+            n.cadena = st;
+            n.valor = tr;
+        }
+        return n;
     }
 }
 

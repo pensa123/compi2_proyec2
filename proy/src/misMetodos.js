@@ -8,7 +8,10 @@ var misFuncs = document.createTextNode("");
     intToSt     t11 -> el numero y se mete al heap la cadena. 
     pBool       t17 -> si es 1 imprime true sino false, 
     insCadenaEnHeap t1 -> ref al heap de la cadena que se quiere meter otra vez al heap. 
-    metBoolheap     t1 -> mete true o false al heap dependiendo de t1     
+    metBoolheap     t1 -> mete true o false al heap dependiendo de t1  
+    llenarHeapArr   t1 -> nveces , t2 valor que se mete al heap (se usa para declaracion de arreglos :D jeje)
+    copyArrToStack  t1 -> inicio del heap a copear, t2 -> cantidad de datos a copear.   
+    stlength        t1 -> inicio del heap , t2 -> es el resultado del tamaño.
 */
 
 
@@ -199,26 +202,109 @@ misFuncs.appendData('    L26: \n');
 misFuncs.appendData('end \n\n');
 
 
-misFuncs.appendData('proc compIndiceArr begin\n'); 
-misFuncs.appendData('    t3 = 1; \n'); 
-misFuncs.appendData('    if(t1 < 0) goto L27; \n'); 
-misFuncs.appendData('    if(t1 >= t2) goto L27;\n'); 
-misFuncs.appendData('    goto L28; \n'); 
-misFuncs.appendData('    L27: \n'); 
-misFuncs.appendData('        E = 2;\n'); 
-misFuncs.appendData('        t3 = 0; \n'); 
-misFuncs.appendData('    L28: \n'); 
-misFuncs.appendData('end\n'); 
+misFuncs.appendData('proc compIndiceArr begin\n');
+misFuncs.appendData('    t3 = 1; \n');
+misFuncs.appendData('    if(t1 < 0) goto L27; \n');
+misFuncs.appendData('    if(t1 >= t2) goto L27;\n');
+misFuncs.appendData('    goto L28; \n');
+misFuncs.appendData('    L27: \n');
+misFuncs.appendData('        E = 2;\n');
+misFuncs.appendData('        t3 = 0; \n');
+misFuncs.appendData('    L28: \n');
+misFuncs.appendData('end\n');
 
-//continuamos en t18  Y L29
 
+misFuncs.appendData('proc llenarHeapArr begin\n');
+misFuncs.appendData('    if(t1 <= 0) goto L30;\n');
+misFuncs.appendData('    L31:\n');
+misFuncs.appendData('    if(t1 == 0) goto L29;\n');
+misFuncs.appendData('        Heap[h] = t2; \n');
+misFuncs.appendData('        h = h + 1; \n');
+misFuncs.appendData('        t1 = t1 - 1; \n');
+misFuncs.appendData('        goto L31; \n');
+misFuncs.appendData('    L30:\n');
+misFuncs.appendData('        E = 2;\n');
+misFuncs.appendData('    L29:\n');
+misFuncs.appendData('end\n\n');
+
+misFuncs.appendData('proc copyArrToStack begin\n');
+misFuncs.appendData('    L32:\n');
+misFuncs.appendData('    if(t2 == 0) goto L33;\n');
+misFuncs.appendData('    t3 = heap[t1]; \n');
+misFuncs.appendData('    Heap[h] = t3; \n');
+misFuncs.appendData('    h = h + 1;\n');
+misFuncs.appendData('    t1 = t1 + 1; \n');
+misFuncs.appendData('    t2 = t2 - 1;\n');
+misFuncs.appendData('    goto L32; \n');
+misFuncs.appendData('    L33:\n');
+misFuncs.appendData('end\n\n');
+
+misFuncs.appendData('proc stlength begin \n');
+misFuncs.appendData('    t2 = 0; \n');
+misFuncs.appendData('    L35:\n');
+misFuncs.appendData('    t3 = heap[t1];\n');
+misFuncs.appendData('    if(t3 == -1)goto L34;\n');
+misFuncs.appendData('        t2 = t2 + 1; \n');
+misFuncs.appendData('        t1 = t1 + 1; \n');
+misFuncs.appendData('        goto L35; \n');
+misFuncs.appendData('    L34:\n');
+misFuncs.appendData('end \n\n');
+
+
+misFuncs.appendData('proc tocharArray begin \n');
+misFuncs.appendData('    L36:\n');
+misFuncs.appendData('    t2 = heap[t1]; \n');
+misFuncs.appendData('    if(t2 == -1) goto L37;\n');
+misFuncs.appendData('        heap[h] = t2;\n');
+misFuncs.appendData('        h = h + 1; \n');
+misFuncs.appendData('        t1 = t1 + 1; \n');
+misFuncs.appendData('        goto L36; \n');
+misFuncs.appendData('    L37:\n');
+misFuncs.appendData('end\n\n');
+
+misFuncs.appendData('proc tolowercase begin \n');
+misFuncs.appendData('    L38:\n');
+misFuncs.appendData('    t2 = heap[t1]; \n');
+misFuncs.appendData('    if(t2 == -1) goto L39;\n');
+misFuncs.appendData('    if(t2 < 65) goto L40;\n');
+misFuncs.appendData('    if(t2 > 90) goto L40;\n');
+misFuncs.appendData('    t2 = t2 + 32;\n');
+misFuncs.appendData('    L40:\n');
+misFuncs.appendData('        heap[h] = t2; \n');
+misFuncs.appendData('        h = h + 1; \n');
+misFuncs.appendData('        t1 = t1 + 1;\n');
+misFuncs.appendData('    goto L38; \n');
+misFuncs.appendData('    L39:\n');
+misFuncs.appendData('    heap[h] = -1; \n');
+misFuncs.appendData('    h = h + 1;\n');
+misFuncs.appendData('end\n\n');
+
+
+misFuncs.appendData('proc touppercase begin \n'); 
+misFuncs.appendData('    L41:\n'); 
+misFuncs.appendData('    t2 = heap[t1]; \n'); 
+misFuncs.appendData('    if(t2 == -1) goto L43; \n'); 
+misFuncs.appendData('    if(t2 < 97) goto L42; \n'); 
+misFuncs.appendData('    if(t2 > 122) goto L42;\n'); 
+misFuncs.appendData('    t2 = t2 - 32;\n'); 
+misFuncs.appendData('    L42:\n'); 
+misFuncs.appendData('        heap[h] = t2; \n'); 
+misFuncs.appendData('        h = h + 1; \n'); 
+misFuncs.appendData('        t1 = t1 + 1;\n'); 
+misFuncs.appendData('    goto L41; \n'); 
+misFuncs.appendData('    L43:\n'); 
+misFuncs.appendData('    heap[h] = -1; \n'); 
+misFuncs.appendData('    h = h + 1;\n'); 
+misFuncs.appendData('end\n\n');
+
+//continuamos en t18  Y L44
 
 
 
 class temp_salto {
     constructor() {
         this.nt = 18;
-        this.ns = 29;
+        this.ns = 44;
     }
 
     nextTemp() {

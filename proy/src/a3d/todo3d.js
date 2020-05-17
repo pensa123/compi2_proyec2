@@ -25,10 +25,6 @@ var tp_3d = ["int", "double", "id"];
 
 var opb_3d = ["<=", ">=", "==", "<>", "<", ">"];
 
-class ins3d extends Nodo {
-
-}
-
 class decasign3d extends Nodo {
     opt3d() {
         var n = this.hijos[0].opt3d();
@@ -64,7 +60,9 @@ class asignacion3d extends Nodo {
         var n1 = this.hijos[0].opt3d();
         var n2 = this.hijos[1].opt3d();
         var ret = this.id + " = " + n1 + " " + opn_3d[this.opn] + " " + n2 + ";\n";
-        if (this.opn == opn3d.MAS) {
+        if (!optim) {
+
+        } else if (this.opn == opn3d.MAS) {
             if (n1 == 0) {
                 if (n2 == this.id) {
                     return this.niuoptim(8, ret, "");
@@ -141,7 +139,6 @@ class asignacion3d extends Nodo {
     }
 }
 
-
 class asignArr extends Nodo {
     // a = Heap[n]
     opt3d() {
@@ -160,12 +157,11 @@ class arrAsign extends Nodo {
     }
 }
 
-
 class opBool3d extends Nodo {
     opt3d() {
         var n1 = this.hijos[0].opt3d();
         var n2 = this.hijos[1].opt3d();
-        if (n1 == n2) {
+        if (n1 == n2 && optim) {
             if (this.opb == opb3d.IGUALIGUAL || this.opb == opb3d.MAYORIGUAL || this.opb == opb3d.MENORIGUAL) {
                 return [n1 + " " + opb_3d[this.opb] + " " + n2, "ST"];
             } else {
@@ -173,7 +169,7 @@ class opBool3d extends Nodo {
             }
         }
 
-        if (!isNaN(n1) && !isNaN(n2)) {
+        if (!isNaN(n1) && !isNaN(n2) && optim) {
             if (this.opb == opb3d.IGUALIGUAL) {
                 return [n1 + " " + opb_3d[this.opb] + " " + n2, "SF"];
             } else if (this.opb == opb3d.DIFIGUAL) {
@@ -184,7 +180,6 @@ class opBool3d extends Nodo {
         return [n1 + " " + opb_3d[this.opb] + " " + n2];
     }
 }
-
 
 class print3d extends Nodo {
     opt3d() {

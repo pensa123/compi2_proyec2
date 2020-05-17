@@ -1,0 +1,19 @@
+var t1,t2,t3,t4,t5; 
+t1 = 2; 
+t2 = 3; 
+t3 = 4; 
+L2:
+if(t1 == 2)goto L1;
+t4 = 5; 
+t5 = 6;
+call principal; 
+L1: 
+if(t2 == 3)goto L2;
+goto L0; 
+proc principal begin
+L10:
+print("%c" , 19);
+goto L10;
+end
+L0:
+

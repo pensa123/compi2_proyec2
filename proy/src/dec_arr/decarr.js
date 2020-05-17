@@ -1,5 +1,42 @@
-class niu_arr extends Nodo {
+var arrst = null;
 
+class niu_arr extends Nodo {
+    traducir(ts) {
+
+
+        var n = this.hijos[0].traducir(ts);
+        if (n == null) {
+            return null;
+        }
+        var st = n.cadena;
+        var taux = null;
+
+        if (this.tipo.toLowerCase() == "string") {
+            print("Si llega");
+            this.tipo = vtipo.string;
+            taux = salto_temp.nextTemp();
+            st += taux + " = h;\n";
+            st += "heap[h] = -1;";
+            st += "h = h + 1;\n";
+        }
+
+        if (!(compImplicito(vtipo.integer, n.tipo))) {
+            return this.niuerror("En strc[e] se espera un entero.");
+        }
+        var tr = salto_temp.nextTemp();
+        st += tr + " = h;\n";
+        st += "heap[h] = " + n.valor + ";\n";
+        st += "h = h + 1;\n";
+        st += "t1 = " + n.valor + ";\n";
+        if (this.tipo == vtipo.string) {
+            st += "t2 = " + taux + ";\n"
+        } else {
+            st += "t2 = 0;\n";
+        }
+
+        st += "call llenarHeapArr;\n";
+        return { cadena: st, valor: tr, tipo: this.tipo, esarr: true };
+    }
 }
 
 class arr_content extends Nodo {

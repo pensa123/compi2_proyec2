@@ -104,8 +104,9 @@
 
 
 <<EOF>>				return 'EOF';
-.					{ console.error('Este es un error léxico: ' + yytext + ', en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column);
-						nerror("Linea " + yylloc.first_line + " Columna " + yylloc.first_column +  ", Error lexico  '" + yytext + "' no reconocido."); 
+.					{   //console.error('Este es un error léxico: ' + yytext + ', en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column);
+						//nerror("Linea " + yylloc.first_line + " Columna " + yylloc.first_column +  ", Error lexico  '" + yytext + "' no reconocido."); 
+						nerror2(yylloc.first_line , yylloc.first_column , "Lexico","'"+ yytext +"' no reconocido.");
 					 }
 
 /lex
@@ -153,18 +154,23 @@ ini:
 
 ;
 
-instrucciones_cuerpo : instrucciones_cuerpo instruccion_c {  $1.hijos.push($2); $$ = $1;  }
-		| {$$ = new Instrucciones(this._$.first_line,this._$.first_column); } ; 
+instrucciones_cuerpo : instrucciones_cuerpo instruccion_c { if($2 != null){ $1.hijos.push($2);} $$ = $1;  }
+		| {$$ = new Instrucciones(@1.first_line,@1.first_column); } ; 
 
 instruccion_c :  declaracion fin		  { $$ = $1; } 
 		| visibilidad declararfuncion { $$ = $2; }
 		| declararfuncion { $$ = $1; }
 		| defest {$$ = $1; }
+		| error PCOMA { 
+					//nerror("Linea " + @1.first_line + " Columna " + @1.first_column +  ", Error sintactico recuperado en.'" + $1 + "'\n" + lastNodo); $$ = null; 
+					nerror2(@1.first_line , @1.first_column , "Sintactico" , "Error sintactico recuperado en.'" + $1 + "'\n" + lastNodo);
+					$$ = null; 
+				}
 		; 
 
 declararfuncion : tipo IDENTIFICADOR APAR params CPAR ALLAVE instrucciones_fun CLLAVE
 				{
-					$$ = new decfunc(this._$.first_line,this._$.first_column);
+					$$ = new decfunc(@1.first_line,@1.first_column);
 					$$.tipo = $1;
 					$$.id = $2; 
 					$$.hijos = $4;
@@ -172,7 +178,7 @@ declararfuncion : tipo IDENTIFICADOR APAR params CPAR ALLAVE instrucciones_fun C
 				}
 				| RVOID IDENTIFICADOR APAR params CPAR  ALLAVE instrucciones_fun CLLAVE
 				{
-					$$ = new decfunc(this._$.first_line,this._$.first_column);
+					$$ = new decfunc(@1.first_line,@1.first_column);
 					$$.tipo = [vtipo.void];
 					$$.id = $2; 
 					$$.hijos = $4;
@@ -183,17 +189,17 @@ declararfuncion : tipo IDENTIFICADOR APAR params CPAR ALLAVE instrucciones_fun C
 params : params2 {$$ = $1;} | {$$ = [];} ;
 
 params2 :   params2 COMA tipo IDENTIFICADOR { 
-				$$ = $1; var n = new Param(this._$.first_line,this._$.first_column);
+				$$ = $1; var n = new Param(@1.first_line,@1.first_column);
 				n.tipo = $3; n.id = $4; $$.push(n); 	
 			 }
 		| tipo IDENTIFICADOR { 
-				$$ = []; var n  = new Param(this._$.first_line,this._$.first_column); 
+				$$ = []; var n  = new Param(@1.first_line,@1.first_column); 
 				n.tipo = $1; n.id = $2; $$.push(n);
 	   	}
 	  	;
 
-instrucciones_fun : instrucciones_fun instruccion_f {$1.hijos.push($2); $$ = $1;      }
-					|{$$ = new Instrucciones(this._$.first_line,this._$.first_column); } ; 
+instrucciones_fun : instrucciones_fun instruccion_f {if($2 != null) {$1.hijos.push($2); } $$ = $1;      }
+					|{$$ = new Instrucciones(@1.first_line,@1.first_column); } ; 
 
 instruccion_f :  declaracion fin {$$ = $1; } 
 				| defest {$$ = $1; }
@@ -206,12 +212,27 @@ instruccion_f :  declaracion fin {$$ = $1; }
 				| llamadaMetodo fin {$$ = $1; $$.exp = false; }
 				| fprint fin {$$ = $1}
 				| inc_dec fin {$$ = $1}
+				| try_catch {$$ = $1;}
+				| error PCOMA { 
+					//nerror("Linea " + @1.first_line + " Columna " + @1.first_column +  ", Error sintactico recuperado en.'" + $1 + "'\n" + lastNodo); $$ = null; 
+					nerror2(@1.first_line , @1.first_column , "Sintactico" , "Error sintactico recuperado en.'" + $1 + "'\n" + lastNodo);
+					$$ = null; 
+				}
 ;
+
+
+try_catch : RTRY  ALLAVE instrucciones_fun CLLAVE RCATCH APAR IDENTIFICADOR IDENTIFICADOR CPAR ALLAVE instrucciones_fun CLLAVE{
+	$$ = new Try_catch(@1.first_line , @1.first_column);
+	$$.hijos.push($3); 
+	$$.hijos.push($7); 
+	$$.hijos.push($8); 
+	$$.hijos.public($9);
+} ;  
 
 
 defest : RDEFINE IDENTIFICADOR RAS ACORCH  listaest   CCORCH fin 
 	{
-		$$ = new estructura(this._$.first_line,this._$.first_column);
+		$$ = new estructura(@1.first_line,@1.first_column);
 		$$.hijos= ($5); 
 		$$.id = $2; 
 	}; 
@@ -219,14 +240,14 @@ defest : RDEFINE IDENTIFICADOR RAS ACORCH  listaest   CCORCH fin
 listaest : listaest COMA aest {$1.push($3); $$ = $1; }
 		|  aest { $$ = [$1];  } ; 
 
-aest : 	  tipo IDENTIFICADOR { $$ = new atributoEst(this._$.first_line,this._$.first_column); $$.id = $2; $$.tipo = $1;  }
+aest : 	  tipo IDENTIFICADOR { $$ = new atributoEst(@1.first_line,@1.first_column); $$.id = $2; $$.tipo = $1;  }
 		| tipo IDENTIFICADOR IGUAL exp {
-			$$ = new atributoEst(this._$.first_line,this._$.first_column); $$.id = $2; $$.tipo = $1; $$.hijos.push($4); 
+			$$ = new atributoEst(@1.first_line,@1.first_column); $$.id = $2; $$.tipo = $1; $$.hijos.push($4); 
 		 }; 
 
-fprint : RPRINT APAR exp CPAR { $$ = new Print(this._$.first_line,this._$.first_column); $$.hijos.push($3);    }  ; 
+fprint : RPRINT APAR exp CPAR { $$ = new Print(@1.first_line,@1.first_column); $$.hijos.push($3);    }  ; 
 
-llamadaMetodo : IDENTIFICADOR  lista_params CPAR {$$ = new llamadaFunc(this._$.first_line,this._$.first_column);
+llamadaMetodo : IDENTIFICADOR  lista_params CPAR {$$ = new llamadaFunc(@1.first_line,@1.first_column);
 						$$.hijos = $2; $$.id = $1;  };
 
 lista_params :   APAR { $$ = [];  }
@@ -236,13 +257,13 @@ lista_params2 : param {$$ = [$1]; } | lista_params2 COMA param {$1.push($3); $$ 
 
 param :  sparam  {$$ = $1; $$.id = null; }
 	| IDENTIFICADOR IGUAL sparam {$$ = $3;
-		var n = new Id(this._$.first_line,this._$.first_column);
+		var n = new Id(@1.first_line,@1.first_column);
 		n.id = $1; 
 		$$.hijos.unshift(n);
 	 } ; 
 
-sparam : exp { $$ = new SParam(this._$.first_line,this._$.first_column); $$.hijos.push($1); $$.ref = false;  }
-	| DOLAR exp {$$ = new SParam(this._$.first_line,this._$.first_column); $$.hijos.push($2); $$.ref = true; };
+sparam : exp { $$ = new SParam(@1.first_line,@1.first_column); $$.hijos.push($1); $$.ref = false;  }
+	| DOLAR exp {$$ = new SParam(@1.first_line,@1.first_column); $$.hijos.push($2); $$.ref = true; };
 
 
 asignacion : IDENTIFICADOR  IGUAL pvalor  {
@@ -282,7 +303,7 @@ otro2 : IDENTIFICADOR ACORCH exp CCORCH {
 		$$= [n]; 	
 	}
 	|
-	IDENTIFICADOR APAR CPAR{
+	IDENTIFICADOR  lista_params CPAR {
 		var n = new accesofunc(@1.first_line , @1.first_column);
 		n.id = $1; 
 		$$= [n];
@@ -306,7 +327,7 @@ otrofin : IDENTIFICADOR ACORCH exp CCORCH {
 		$$ = [n , n2];
 	}
 	|
-	IDENTIFICADOR PUNTO IDENTIFICADOR APAR CPAR{
+	IDENTIFICADOR PUNTO IDENTIFICADOR  lista_params CPAR {
 		var n = new Id(@1.first_line , @1.first_column);
 		n.id = $1; 
 		var n2 = new accesofunc(@3.first_line , @3.first_column);
@@ -316,19 +337,19 @@ otrofin : IDENTIFICADOR ACORCH exp CCORCH {
 	; 
 
 ciclos:  RWHILE APAR exp CPAR ALLAVE instrucciones_fun CLLAVE {
-			$$ = new While(this._$.first_line,this._$.first_column);
+			$$ = new While(@1.first_line,@1.first_column);
 			$$.hijos.push($3); 
 			$$.hijos.push($6); 
 		}
 		| RDO ALLAVE instrucciones_fun CLLAVE RWHILE APAR exp CPAR fin 
 		{
-			$$ = new do_while(this._$.first_line,this._$.first_column);
+			$$ = new do_while(@1.first_line,@1.first_column);
 			$$.hijos = [$3, $7]; 
 
 		}
 		| RFOR APAR ifor PCOMA mfor PCOMA ffor CPAR ALLAVE instrucciones_fun CLLAVE
 		{
-			$$ = new For(this._$.first_line,this._$.first_column);
+			$$ = new For(@1.first_line,@1.first_column);
 			$$.hijos = [$3 , $5 , $7 , $10]; 
 		}
 ; 
@@ -337,17 +358,17 @@ ifor : declaracion {$$ = $1;}                   |{$$ = null; } ;
 mfor : exp {$$ = $1;}                           |{$$ = null; } ; 
 ffor : asignacion{$$ = $1;} | inc_dec{$$ = $1;} |{$$ = null; } ; 
 
-cases :  RCASE exp DOSPTS {$$ = new Case(this._$.first_line,this._$.first_column); $$.hijos.push($2); }
-	|    RDEFAULT DOSPTS { $$ = new Default(this._$.first_line,this._$.first_column); };
+cases :  RCASE exp DOSPTS {$$ = new Case(@1.first_line,@1.first_column); $$.hijos.push($2); }
+	|    RDEFAULT DOSPTS { $$ = new Default(@1.first_line,@1.first_column); };
 
-transferencia : RBREAK fin  { $$ = new Break(this._$.first_line,this._$.first_column); }
-				| RCONTINUE fin { $$ = new Continue(this._$.first_line,this._$.first_column);  }
-				| RRETURN PCOMA { $$ = new Return(this._$.first_line,this._$.first_column);   }
-				| RRETURN exp PCOMA {$$ = new Return(this._$.first_line,this._$.first_column); $$.hijos.push($2);  } ; 
+transferencia : RBREAK fin  { $$ = new Break(@1.first_line,@1.first_column); }
+				| RCONTINUE fin { $$ = new Continue(@1.first_line,@1.first_column);  }
+				| RRETURN PCOMA { $$ = new Return(@1.first_line,@1.first_column);   }
+				| RRETURN exp PCOMA {$$ = new Return(@1.first_line,@1.first_column); $$.hijos.push($2);  } ; 
 
 switch : RSWITCH APAR exp CPAR ALLAVE instrucciones_fun CLLAVE
 {
-	$$ = new Switch(this._$.first_line,this._$.first_column);
+	$$ = new Switch(@1.first_line,@1.first_column);
 	$$.hijos.push($3);
 	$$.hijos.push($6); 
 }
@@ -357,13 +378,13 @@ switch : RSWITCH APAR exp CPAR ALLAVE instrucciones_fun CLLAVE
 
 si : RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE 
 	{
-		$$ = new If(this._$.first_line,this._$.first_column); 
+		$$ = new If(@1.first_line,@1.first_column); 
 		$$.hijos.push($3); 
 		$$.hijos.push($6); 
 	}
 	| RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE RELSE ALLAVE instrucciones_fun CLLAVE
 	{
-		$$ = new If(this._$.first_line,this._$.first_column); 
+		$$ = new If(@1.first_line,@1.first_column); 
 		$$.hijos.push($3); 
 		$$.hijos.push($6);
 		$$.hijos.push($10);
@@ -371,7 +392,7 @@ si : RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE
 	| RIF APAR exp CPAR ALLAVE instrucciones_fun CLLAVE RELSE si  
 	{
 		
-		$$ = new If(this._$.first_line,this._$.first_column); 
+		$$ = new If(@1.first_line,@1.first_column); 
 		$$.hijos.push($3); 
 		$$.hijos.push($6);
 		$$.hijos.push($9);
@@ -391,28 +412,28 @@ declaracion :   tipo listaID IGUAL pvalor                      //declaracion tip
 			}
 			|	RVAR IDENTIFICADOR DOSPUNTOSIGUAL pvalor       //declaracion tipo 2   
 			{
-				$$ = new Dect2_4(this._$.first_line,this._$.first_column); 
+				$$ = new Dect2_4(@1.first_line,@1.first_column); 
 				$$.tipo = vddi.var; 
 				$$.id = $2; 
 				$$.hijos.push($4);
 			}
 			|	RCONST IDENTIFICADOR DOSPUNTOSIGUAL pvalor     //declaracion tipo 3  
 			{
-				$$ = new Dect2_4(this._$.first_line,this._$.first_column); 
+				$$ = new Dect2_4(@1.first_line,@1.first_column); 
 				$$.tipo = vddi.const; 
 				$$.id = $2; 
 				$$.hijos.push($4);
 			} 
 			|	RGLOBAL IDENTIFICADOR DOSPUNTOSIGUAL pvalor    //declaracion tipo 4
 			{
-				$$ = new Dect2_4(this._$.first_line,this._$.first_column); 
+				$$ = new Dect2_4(@1.first_line,@1.first_column); 
 				$$.tipo = vddi.global; 
 				$$.id = $2; 
 				$$.hijos.push($4);
 			}
 			|   tipo listaID 									//Declaracion tipo 5
 			{
-				var n = new Declaracion(this._$.first_line,this._$.first_column); 
+				var n = new Declaracion(@1.first_line,@1.first_column); 
 				n.tipo = $1; 
 				n.hijos.push($2);
 
@@ -424,7 +445,8 @@ pvalor : exp {$$ = $1; }
 		| valarray
 		;
 
-valarray : RSTRC tp ACORCH exp CCORCH {$$ = new niu_arr(@1.first_line, @1.first_column); $$.tipo = $2; $$.hijos.push($4);  } 
+valarray : RSTRC tp ACORCH exp CCORCH {$$ = new niu_arr(@1.first_line, @1.first_column); $$.tipo = $2; $$.hijos.push($4);  }
+		| RSTRC IDENTIFICADOR ACORCH exp CCORCH {$$ = new niu_arr(@1.first_line, @1.first_column); $$.tipo = $2; $$.hijos.push($4);  }
 		|  arrvalue                   {$$ = $1; }
 		; 
 
@@ -453,7 +475,7 @@ tp : RINTEGER 	{ $$ = vtipo.integer; 	}
 listaID :  listaID COMA IDENTIFICADOR  { $1.hijos.push($3); $$ = $1; }
 		| IDENTIFICADOR                  
 		{ 
-			var n = new  ListaId(this._$.first_line,this._$.first_column);
+			var n = new  ListaId(@1.first_line,@1.first_column);
 			n.hijos.push($1); 
 			$$ = n; 
 		}; 
@@ -461,59 +483,59 @@ listaID :  listaID COMA IDENTIFICADOR  { $1.hijos.push($3); $$ = $1; }
 import : RIMPORT  listaimport fin { $$ = $2; }  ; 
 
 listaimport : listaimport COMA ARCHIVO  { $1.hijos.push($3); $$ = $1;} 
-	|  ARCHIVO   { var  n = new Importar(this._$.first_line,this._$.first_column); n.hijos.push($1); $$ = n;   }  ; 
+	|  ARCHIVO   { var  n = new Importar(@1.first_line,@1.first_column); n.hijos.push($1); $$ = n;   }  ; 
    
 exp
-	: MENOS exp %prec UMENOS	{$$ = new expresionUnaria(this._$.first_line,this._$.first_column); 
+	: MENOS exp %prec UMENOS	{$$ = new expresionUnaria(@1.first_line,@1.first_column); 
 								$$.operando = voperando.menos; $$.hijos.push($2);  }
-	| NOT exp					{$$ = new expresionUnaria(this._$.first_line,this._$.first_column);
+	| NOT exp					{$$ = new expresionUnaria(@1.first_line,@1.first_column);
 								 $$.operando = voperando.not;   $$.hijos.push($2);  }
 
-	| exp MAS exp				{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.mas; $$.hijos.push($1); $$.hijos.push($3); }
-	| exp MENOS exp	  			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.menos; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp POR exp	  			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.por; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp DIVIDIDO exp 			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.dividido; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp MODULO exp   			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.modulo; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp POTENCIA exp 			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.potencia; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp MAS exp				{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.mas; $$.hijos.push($1); $$.hijos.push($3); }
+	| exp MENOS exp	  			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.menos; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp POR exp	  			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.por; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp DIVIDIDO exp 			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.dividido; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp MODULO exp   			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.modulo; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp POTENCIA exp 			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.potencia; $$.hijos.push($1); $$.hijos.push($3);  }
 
-	| exp XOR exp   	 		{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.xor; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp OR  exp		    	{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.or; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp AND  exp		    	{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.and; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp XOR exp   	 		{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.xor; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp OR  exp		    	{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.or; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp AND  exp		    	{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.and; $$.hijos.push($1); $$.hijos.push($3);  }
 
-	| exp IGUALIGUAL exp		{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.igualigual; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp DIFIGUAL exp  		{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.difigual; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp TRESIGUAL exp 		{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.trigual; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp IGUALIGUAL exp		{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.igualigual; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp DIFIGUAL exp  		{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.difigual; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp TRESIGUAL exp 		{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.trigual; $$.hijos.push($1); $$.hijos.push($3);  }
 
-	| exp MAYOR exp   			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.mayor; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp MENOR exp   			{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.menor; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp MAYORIGUAL exp		{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.mayorigual; $$.hijos.push($1); $$.hijos.push($3);  }
-	| exp MENORIGUAL exp		{$$ = new expresion_binaria(this._$.first_line,this._$.first_column); $$.operando = voperando.menorigual; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp MAYOR exp   			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.mayor; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp MENOR exp   			{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.menor; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp MAYORIGUAL exp		{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.mayorigual; $$.hijos.push($1); $$.hijos.push($3);  }
+	| exp MENORIGUAL exp		{$$ = new expresion_binaria(@1.first_line,@1.first_column); $$.operando = voperando.menorigual; $$.hijos.push($1); $$.hijos.push($3);  }
 	
 	
 	| APAR exp CPAR				{ $$ = $2; }
 
-	| RFALSE               		{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.boolean; $$.valor = false; 		}
-	| RTRUE						{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.boolean; $$.valor = true; 		}
-	| ENTERO					{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.integer; $$.valor = Number($1); 	}
-	| DECIMAL					{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.double; $$.valor = Number($1);  	}
-	| CADENA                	{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.string; $$.valor = $1;  			}
-	| CHAR                		{ $$ = new primitivo(this._$.first_line,this._$.first_column); $$.tipo = vprim.char; $$.valor = $1;  			}
+	| RFALSE               		{ $$ = new primitivo(@1.first_line,@1.first_column); $$.tipo = vprim.boolean; $$.valor = false; 		}
+	| RTRUE						{ $$ = new primitivo(@1.first_line,@1.first_column); $$.tipo = vprim.boolean; $$.valor = true; 		}
+	| ENTERO					{ $$ = new primitivo(@1.first_line,@1.first_column); $$.tipo = vprim.integer; $$.valor = Number($1); 	}
+	| DECIMAL					{ $$ = new primitivo(@1.first_line,@1.first_column); $$.tipo = vprim.double; $$.valor = Number($1);  	}
+	| CADENA                	{ $$ = new primitivo(@1.first_line,@1.first_column); $$.tipo = vprim.string; $$.valor = $1;  			}
+	| CHAR                		{ $$ = new primitivo(@1.first_line,@1.first_column); $$.tipo = vprim.char; $$.valor = $1;  			}
 
-	| IDENTIFICADOR				{ $$ = new Id(this._$.first_line,this._$.first_column); $$.id = $1; $$.exp = true;  }
+	| IDENTIFICADOR				{ $$ = new Id(@1.first_line,@1.first_column); $$.id = $1; $$.exp = true;  }
 	| otro                      { var n = new laccesos(@1.first_line , @1.first_column); n.hijos = $1; $$ = n; $$.exp = true; }
 
 
 	| inc_dec 					{$$ = $1; $$.retValor = true; }
 	| llamadaMetodo				{$$ = $1; $$.exp = true;  }
 
-	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
-	| APAR RCHAR CPAR exp 		{ $$ = new Casteo(this._$.first_line,this._$.first_column); $$.tipo = vtipo.char; $$.hijos.push($4);}
+	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(@1.first_line,@1.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
+	| APAR RCHAR CPAR exp 		{ $$ = new Casteo(@1.first_line,@1.first_column); $$.tipo = vtipo.char; $$.hijos.push($4);}
 
 ;
 
 
-inc_dec:IDENTIFICADOR MASMAS		{ $$ = new inc_dec(this._$.first_line,this._$.first_column); $$.operando = voperando.masmas; $$.id = $1; $$.retValor = false; }
-	|   IDENTIFICADOR MENOSMENOS	{ $$ = new inc_dec(this._$.first_line,this._$.first_column); $$.operando = voperando.menosmenos; $$.id = $1; $$.retValor = false; }
+inc_dec:IDENTIFICADOR MASMAS		{ $$ = new inc_dec(@1.first_line,@1.first_column); $$.operando = voperando.masmas; $$.id = $1; $$.retValor = false; }
+	|   IDENTIFICADOR MENOSMENOS	{ $$ = new inc_dec(@1.first_line,@1.first_column); $$.operando = voperando.menosmenos; $$.id = $1; $$.retValor = false; }
 ;
 
 visibilidad : RPUBLIC | RPRIVATE  ;

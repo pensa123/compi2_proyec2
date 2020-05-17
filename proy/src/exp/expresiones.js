@@ -108,12 +108,39 @@ class expresion_binaria extends Nodo {
             if (vi.tipo == vtipo.string || vd.tipo == vtipo.string) {
                 //st += tr + "=" + vi.valor + s_operando[this.operando] + vd.valor + ";\n";
                 st += tr + "= h;\n";
-                st += "t1 = " + vi.valor + ";\n";
-                st += "call insCadenaEnHeap;\n";
-                st += "t1 = " + vd.valor + ";\n";
-                st += "call insCadenaEnHeap;\n";
+                if (vi.tipo == vtipo.string) {
+                    st += "t1 = " + vi.valor + ";\n";
+                    st += "call insCadenaEnHeap;\n";
+                } else if (vi.tipo == vtipo.char) {
+                    print(vi.valor);
+                    st += "Heap[h] = " + vi.valor + ";\n";
+                    st += "h = h + 1;\n";
+                } else if (vi.tipo == vtipo.double || vi.tipo == vtipo.integer) {
+                    st += "t11 = " + vi.valor + ";\n";
+                    st += "call doubleToSt;\n";
+                } else if (vi.tipo == vtipo.boolean) {
+                    st += "t1 = " + vi.valor + ";\n";
+                    st += "call metBoolheap;\n";
+                }
+
+                if (vd.tipo == vtipo.string) {
+                    st += "t1 = " + vd.valor + ";\n";
+                    st += "call insCadenaEnHeap;\n";
+                } else if (vd.tipo == vtipo.char) {
+                    st += "Heap[h] = " + vd.valor + ";\n";
+                    st += "h = h + 1;\n";
+                } else if (vd.tipo == vtipo.double || vd.tipo == vtipo.integer) {
+                    st += "t11 = " + vd.valor + ";\n";
+                    st += "call doubleToSt;\n";
+                } else if (vd.tipo == vtipo.boolean) {
+                    st += "t1 = " + vd.valor + ";\n";
+                    st += "call metBoolheap;\n";
+                }
+
+
                 st += "Heap[h] = -1;\n";
-                st += "h = h + 1;\n"
+                st += "h = h + 1;\n";
+                print(st);
                 return { valor: tr, tipo: vtipo.string, cadena: st };
             }
 
@@ -265,60 +292,47 @@ class expresion_binaria extends Nodo {
                 return null;
             }
             var st = "";
-
-
             if (!(vi.tipo == vd.tipo && vd.tipo == vtipo.boolean)) {
                 return this.niuerror("Para un " + v_operando[this.operando] + " se espera dos operandos booleanos. ");
             }
-
-            st += vi.cadena;
-            if (typeof vi.etV != "undefined") {
-                for (var a = 0; a < vi.etV.length; a++) {
-                    if (this.operando == voperando.and) {
-                        st += vi.etV[a] + ":\n";
-                    } else {
-                        etV.push(vi.etV[a]);
-                    }
+            if (this.operando == voperando.or) {
+                var s1 = salto_temp.nextSalto();
+                if (typeof vi.etV != "undefined") {
+                    vi.cadena = replaceAll(vi.cadena, "LF", s1);
+                    st += vi.cadena;
+                } else {
+                    st += vi.cadena;
+                    st += "if ( " + vi.valor + ") goto LT;\n";
+                    st += "goto " + s1 + ";\n";
                 }
-                for (var a = 0; a < vi.etF.length; a++) {
-                    if (this.operando == voperando.and) {
-                        etF.push(vi.etF[a]);
-                    } else {
-                        st += (vi.etF[a]) + ":\n";
-                    }
+                st += s1 + ":\n";
+                st += vd.cadena;
+                if (typeof vd.etV == "undefined") {
+                    st += "if ( " + vd.valor + ") goto LT;\n";
+                    st += "goto LF;\n";
                 }
             } else {
                 var s1 = salto_temp.nextSalto();
-                var s2 = salto_temp.nextSalto();
-                st += "if (" + vi.valor + ") goto " + s1 + ";\n";
-                st += "goto " + s2 + ";\n";
-                st += (this.operando == voperando.or ? s2 : s1) + ":\n";
-                if (this.operando == voperando.and) {
-                    etF.push(s2);
+                if (typeof vi.etV != "undefined") {
+                    vi.cadena = replaceAll(vi.cadena, "LT", s1);
+                    st += vi.cadena;
                 } else {
-                    etV.push(s1);
+                    st += vi.cadena;
+                    st += "if ( " + vi.valor + ") goto " + s1 + ";\n";
+                    st += "goto LF;\n";
+                }
+                st += s1 + ":\n";
+                st += vd.cadena;
+                if (typeof vd.etV == "undefined") {
+                    st += "if( " + vd.valor + ") goto LT;\n";
+                    st += "goto LF;\n";
                 }
             }
+            /*print("---------------or o and jeje----------------");
+            print(st);
+            print("---------------or o and jeje----------------");*/
 
-            st += vd.cadena;
-            if (typeof vd.etV != "undefined") {
-                for (var a = 0; a < vd.etV.length; a++) {
-                    etV.push(vd.etV[a]);
-                }
-                for (var a = 0; a < vd.etF.length; a++) {
-                    etF.push(vd.etF[a]);
-                }
-            } else {
-                var s3 = salto_temp.nextSalto();
-                var s4 = salto_temp.nextSalto();
-                st += "if ( " + vd.valor + ") goto " + s3 + ";\n";
-                st += "goto " + s4 + ";\n";
-                etV.push(s3);
-                etF.push(s4);
-            }
-
-            var midata = { tipo: vtipo.boolean, cadena: st, etV: etV, etF: etF };
-
+            var midata = { tipo: vtipo.boolean, cadena: st, etV: "LT", etF: "LF" };
             return midata;
 
         } else if (this.operando == voperando.xor) {
@@ -331,6 +345,7 @@ class expresion_binaria extends Nodo {
             if (vi == null) {
                 return null;
             }
+            vi = mbatch(vi);
             if (isNaN(vi.valor)) {
                 addToStack.push(vi.valor);
             }
@@ -338,6 +353,7 @@ class expresion_binaria extends Nodo {
             if (vd == null) {
                 return null;
             }
+            vd = mbatch(vd);
             if (isNaN(vi.valor)) {
                 addToStack.pop();
             }
@@ -388,27 +404,24 @@ class expresion_binaria extends Nodo {
 
             etVI.push(s1);
             etFI.push(s2);
-            var s3 = salto_temp.nextSalto();
+            /*var s3 = salto_temp.nextSalto();
             var s4 = salto_temp.nextSalto();
             var s5 = salto_temp.nextSalto();
-            var s6 = salto_temp.nextSalto();
+            var s6 = salto_temp.nextSalto();*/
 
             for (var a = 0; a < etVI.length; a++) {
                 st += etVI[a] + ":\n";
             }
-            st += "if(" + vd.valor + ") goto " + s3 + ";\n";
-            etF.push(s3);
-            st += "goto " + s4 + ";\n";
-            etV.push(s4);
+            st += "if(" + vd.valor + ") goto LF;\n";
+            st += "goto LT;\n";
             for (var a = 0; a < etFI.length; a++) {
                 st += etFI[a] + ":\n";
             }
-            st += "if(" + vd.valor + ") goto " + s5 + ";\n";
-            etV.push(s5);
-            st += "goto " + s6 + ";\n";
-            etF.push(s6);
+            st += "if(" + vd.valor + ") goto LT;\n";
+            st += "goto LF;\n";
 
-            var midata = { tipo: vtipo.boolean, cadena: st, etV: etV, etF: etF };
+
+            var midata = { tipo: vtipo.boolean, cadena: st, etV: "LT", etF: "LF" };
             return midata;
         } else if (this.operando == voperando.potencia) {
             var vi = this.hijos[0].traducir(ts);
@@ -492,7 +505,9 @@ class expresionUnaria extends Nodo {
 
     traducir(ts) {
 
+        print(this);
         var tu = this.hijos[0].traducir(ts);
+        if (tu == null) { return null; }
         var st = tu.cadena;
         if (this.operando == voperando.menos) {
 
@@ -506,10 +521,15 @@ class expresionUnaria extends Nodo {
             if (tu.tipo == vtipo.boolean) {
                 //falta ver lo que trae el return ya que si vienen etiquetas simplemente se cambia.
 
+                print(tu);
+                print("-------------------");
                 if (typeof tu.etV != "undefined") {
-                    var aux = tu.etV;
-                    tu.etV = tu.etF;
-                    tu.etF = aux;
+
+                    var cad = tu.cadena;
+                    cad = replaceAll(cad, "LT", "LA");
+                    cad = replaceAll(cad, "LF", "LT");
+                    cad = replaceAll(cad, "LA", "LF");
+                    tu.cadena = cad;
                     return tu;
                 }
 
@@ -519,6 +539,11 @@ class expresionUnaria extends Nodo {
                 st += tn2 + "=" + nt + "*-1;\n";
                 print("_------------------------_");
                 print(st);
+
+                if (typeof this.estaEnUnIf != "undefined" && this.estaEnUnIf) {
+                    return { valor: tn2 + " == 1", tipo: vtipo.boolean, cadena: st };
+                }
+
                 return { valor: tn2, tipo: vtipo.boolean, cadena: st };
             } else {
                 print("Para hacer un not debe de ser de tipo booleano. ");
@@ -688,9 +713,31 @@ class llamadaFunc extends Nodo {
             this.hijos[a].prel = nt;
             this.hijos[a].nparam = a;
             var pr = this.hijos[a].traducir(ts);
+            if (pr == null) {
+                return null;
+            }
+
+            if (typeof pr.etV != "undefined") {
+                print(pr);
+                pr = mbatch(pr);
+                print(pr);
+                var tr = salto_temp.nextTemp();
+                var staux = tr + "= 1;\n";
+                staux += pr.cadena;
+                for (var b = 0; b < pr.etF.length; b++) {
+                    staux += pr.etF[b] + ":\n";
+                }
+                staux += tr + " = 0;\n";
+                for (var b = 0; b < pr.etV.length; b++) {
+                    staux += pr.etV[b] + ":\n";
+                }
+                pr.cadena = staux;
+                pr.valor = tr;
+                print(pr);
+            }
+
             param.push(pr);
 
-            print(pr);
             var tp = pr.tipo;
             var stsum = "_n";
             if (typeof pr.esarr != "undefined" && pr.esarr) {
@@ -766,7 +813,7 @@ class llamadaFunc extends Nodo {
         print("mi stack " + addToStack.length);
 
         if (addToStack.length != 0) {
-            t1 = salto_temp.nextTemp()
+            t1 = salto_temp.nextTemp();
             for (var a = 0; a < addToStack.length; a++) {
                 nsum++;
                 st += t1 + " = p + " + (nrefNV + a) + ";  ##Para que no se pierda el temporal " + addToStack[a] + "\n";
@@ -806,6 +853,11 @@ class llamadaFunc extends Nodo {
         }
 
         if (this.exp) {
+
+
+            if (typeof this.estaEnUnIf != "undefined") {
+                tret = tret + " == 1";
+            }
             return { cadena: st, valor: tret, tipo: nfunc.tiporetorno };
         }
         return st;
@@ -814,12 +866,25 @@ class llamadaFunc extends Nodo {
 
 class SParam extends Nodo {
     soy() {
-        return "Param " + (this.ref ? "R" : "V ");
+        return "SParam " + (this.ref ? "R" : "V ");
     }
 
     traducir(ts) {
         var nr = this.hijos[0].traducir(ts);
-        //falta ver si es por referencia o valor :( 
+        //falta ver si es por referencia o valor :(
+        if (this.ref) {
+            if (typeof nr.esarr != "undefined" && nr.esarr) {
+                var st = nr.cadena;
+                var t = salto_temp.nextTemp();
+                st += t + " = h;\n";
+                st += "t1 = " + nr.valor + ";\n";
+                st += "t2 = Heap[t1];\n";
+                st += "t2 = t2 + 1;\n";
+                st += "call copyArrToStack;";
+                return { valor: t, tipo: nr.tipo, cadena: st, esarr: true };
+            }
+        }
+
         return nr;
     }
 }
