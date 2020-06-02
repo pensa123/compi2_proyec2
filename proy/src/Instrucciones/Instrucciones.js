@@ -74,7 +74,10 @@ class Instrucciones extends Nodo {
 
         if (haydef) {
             text.appendData("goto " + sdef + ";\n");
+        } else {
+            text.appendData("goto " + sBreak + ";\n");
         }
+
 
         for (var a = 0; a < this.hijos.length; a++) {
             if (this.hijos[a] instanceof Default) {

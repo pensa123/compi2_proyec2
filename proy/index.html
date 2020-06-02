@@ -864,7 +864,7 @@
                   if (arr3d[b].id == saltoCond) {
                     if (arr3d[b + 1] instanceof saltos3d && arr3d[b + 1].hijos.length == 1) {
                       var nsalto = arr3d[b + 1].hijos[0];
-                      var cviejo = n + "...\n " + nsalto + ":\ngoto " + nsalto + ";\n";
+                      var cviejo = n + "...\n " + saltoCond + ":\ngoto " + nsalto + ";\n";
                       cviejo = replaceAll(cviejo, "\n", "<br/>");
                       n = replaceAll(n, saltoCond, nsalto);
                       aux.niuoptim(7, cviejo, n);
@@ -880,7 +880,7 @@
                   if (arr3d[b].id == saltoCond) {
                     if (arr3d[b + 1] instanceof saltos3d && arr3d[b + 1].hijos.length == 1) {
                       var nsalto = arr3d[b + 1].hijos[0];
-                      var cviejo = n + "...\n " + nsalto + ":\ngoto " + nsalto + ";\n";
+                      var cviejo = n + "...\n " + saltoCond + ":\ngoto " + nsalto + ";\n";
                       cviejo = replaceAll(cviejo, "\n", "<br/>");
                       n = replaceAll(n, saltoCond, nsalto);
                       aux.niuoptim(6, cviejo, n);

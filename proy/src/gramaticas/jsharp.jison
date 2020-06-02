@@ -13,7 +13,7 @@
 "//".*										// comentario simple línea
 [/][*][^*]*[*]+([^/*][^*]*[*]+)*[/]			// comentario multiple líneas
 
-<INITIAL>"null"			return 'RNULL';
+"null"			return 'RNULL';
 "import"		return 'RIMPORT';
 
 "false"			return 'RFALSE';
@@ -100,7 +100,7 @@
 
 
 ([a-zA-Z0-9_.-])+(".j") return "ARCHIVO";
-([a-zA-Z])[a-zA-Z0-9_]*	return 'IDENTIFICADOR';
+([a-zA-Z])[a-zA-Z0-9_]*	{ yytext = yytext.toLowerCase();  return 'IDENTIFICADOR'};
 
 
 <<EOF>>				return 'EOF';
@@ -354,7 +354,9 @@ ciclos:  RWHILE APAR exp CPAR ALLAVE instrucciones_fun CLLAVE {
 		}
 ; 
 
-ifor : declaracion {$$ = $1;}                   |{$$ = null; } ; 
+ifor : declaracion {$$ = $1;}                   
+	|asignacion{$$ = $1;} | inc_dec{$$ = $1;}
+	|{$$ = null; } ; 
 mfor : exp {$$ = $1;}                           |{$$ = null; } ; 
 ffor : asignacion{$$ = $1;} | inc_dec{$$ = $1;} |{$$ = null; } ; 
 
@@ -364,7 +366,9 @@ cases :  RCASE exp DOSPTS {$$ = new Case(@1.first_line,@1.first_column); $$.hijo
 transferencia : RBREAK fin  { $$ = new Break(@1.first_line,@1.first_column); }
 				| RCONTINUE fin { $$ = new Continue(@1.first_line,@1.first_column);  }
 				| RRETURN PCOMA { $$ = new Return(@1.first_line,@1.first_column);   }
-				| RRETURN exp PCOMA {$$ = new Return(@1.first_line,@1.first_column); $$.hijos.push($2);  } ; 
+				| RRETURN pvalor PCOMA {$$ = new Return(@1.first_line,@1.first_column); $$.hijos.push($2);  } 
+				;
+
 
 switch : RSWITCH APAR exp CPAR ALLAVE instrucciones_fun CLLAVE
 {
@@ -530,7 +534,6 @@ exp
 
 	| APAR RINTEGER CPAR exp 	{ $$ = new Casteo(@1.first_line,@1.first_column); $$.tipo = vtipo.integer; $$.hijos.push($4);   }
 	| APAR RCHAR CPAR exp 		{ $$ = new Casteo(@1.first_line,@1.first_column); $$.tipo = vtipo.char; $$.hijos.push($4);}
-
 ;
 
 

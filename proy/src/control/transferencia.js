@@ -32,7 +32,11 @@ class Return extends Nodo {
             return this.niuerror("No se esperaba un return");
         }
 
-        if (ret.tipo == vtipo.void) {
+        print(ret); 
+        print("--------------------------");
+        print(ret.tipo);
+
+        if (ret.tipo == null) {
             if (this.hijos.length != 0) {
                 return this.niuerror("En funciones tipo void solo se esperan returns sin expresion.");
             }

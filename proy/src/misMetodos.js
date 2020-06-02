@@ -297,14 +297,92 @@ misFuncs.appendData('    heap[h] = -1; \n');
 misFuncs.appendData('    h = h + 1;\n'); 
 misFuncs.appendData('end\n\n');
 
-//continuamos en t18  Y L44
+
+
+
+misFuncs.appendData('proc cimparr begin \n'); 
+misFuncs.appendData('    if(t1 == 0) goto L45;\n'); 
+misFuncs.appendData('    if(t1 == 1) goto L46;\n'); 
+misFuncs.appendData('    if(t1 == 2) goto L47; \n'); 
+misFuncs.appendData('    if(t1 == 3) goto L48;\n'); 
+misFuncs.appendData('    if(t1 == 4) goto L49; \n'); 
+misFuncs.appendData('    goto L44; \n'); 
+misFuncs.appendData('    L45:\n'); 
+misFuncs.appendData('        #--arr_char--\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",95);\n'); 
+misFuncs.appendData('        print("%c",99);\n'); 
+misFuncs.appendData('        print("%c",104);\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('    goto L44;\n'); 
+misFuncs.appendData('    L46:\n'); 
+misFuncs.appendData('        #--arr_integer--\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",95);\n'); 
+misFuncs.appendData('        print("%c",105);\n'); 
+misFuncs.appendData('        print("%c",110);\n'); 
+misFuncs.appendData('        print("%c",116);\n'); 
+misFuncs.appendData('        print("%c",101);\n'); 
+misFuncs.appendData('        print("%c",103);\n'); 
+misFuncs.appendData('        print("%c",101);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('    goto L44;\n'); 
+misFuncs.appendData('    L47:\n'); 
+misFuncs.appendData('        #--arr_double--\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",95);\n'); 
+misFuncs.appendData('        print("%c",100);\n'); 
+misFuncs.appendData('        print("%c",111);\n'); 
+misFuncs.appendData('        print("%c",117);\n'); 
+misFuncs.appendData('        print("%c",98);\n'); 
+misFuncs.appendData('        print("%c",108);\n'); 
+misFuncs.appendData('        print("%c",101);\n'); 
+misFuncs.appendData('    goto L44;\n'); 
+misFuncs.appendData('    L48:\n'); 
+misFuncs.appendData('        #--arr_boolean--\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",95);\n'); 
+misFuncs.appendData('        print("%c",98);\n'); 
+misFuncs.appendData('        print("%c",111);\n'); 
+misFuncs.appendData('        print("%c",111);\n'); 
+misFuncs.appendData('        print("%c",108);\n'); 
+misFuncs.appendData('        print("%c",101);\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",110);\n'); 
+misFuncs.appendData('    goto L44;\n'); 
+misFuncs.appendData('    L49:\n'); 
+misFuncs.appendData('        #--arr_string--\n'); 
+misFuncs.appendData('        print("%c",97);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",95);\n'); 
+misFuncs.appendData('        print("%c",115);\n'); 
+misFuncs.appendData('        print("%c",116);\n'); 
+misFuncs.appendData('        print("%c",114);\n'); 
+misFuncs.appendData('        print("%c",105);\n'); 
+misFuncs.appendData('        print("%c",110);\n'); 
+misFuncs.appendData('        print("%c",103);\n'); 
+misFuncs.appendData('    L44:\n'); 
+misFuncs.appendData('end \n\n');
+
+
+//continuamos en t18  Y L50
 
 
 
 class temp_salto {
     constructor() {
         this.nt = 18;
-        this.ns = 44;
+        this.ns = 50;
     }
 
     nextTemp() {

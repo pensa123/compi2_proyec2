@@ -21,8 +21,14 @@ class Print extends Nodo {
             st += n.cadena;
         }
 
+        if (typeof n.esarr != "undefined" && n.esarr) {
+            if (!isNaN(n.tipo)) {
+                st += "t1 = " + n.tipo + ";\n";
+                st += "call cimparr;\n";
 
-        if (n.tipo == vtipo.string) {
+                print(st);
+            }
+        } else if (n.tipo == vtipo.string) {
             st += "t1 = " + n.valor + ";\n";
             st += "call imprimir;\n";
         } else if (n.tipo == vtipo.boolean) {

@@ -85,7 +85,7 @@ class Declaracion extends Nodo {
         }
 
         if (this.tipo.length == 2) {
-            if (typeof n.esarr == "undefined") {
+            if (typeof n.esarr == "undefined" && n.esarr) {
                 print(n);
                 return this.niuerror("No se puede asignar un valor normal a un arreglo.");
             }
@@ -217,6 +217,9 @@ class Dect2_4 extends Nodo {
         } else {
             if (!ts.agregarVar(nvar)) {
                 this.niuerror("No se puede agregar variables con el mismo nombre " + nvar.nombre);
+            } else {
+                print("_---------------------");
+                print(ts);
             }
         }
     }
@@ -248,10 +251,10 @@ class Dect2_4 extends Nodo {
             st += "Heap[" + nvar.ref + "] = " + n.valor + ";\n";
         } else {
             var t = salto_temp.nextTemp();
-            st += t + " = p + " + nvar.ref;
+            st += t + " = p + " + nvar.ref + ";\n";
             st += "Stack[" + t + "] =  " + n.valor + ";\n";
+            ts.nvarDeclaradas++;
         }
-
         nvar.declarada = true;
         nvar.instanciada = true;
         return st;
@@ -282,6 +285,12 @@ class decfunc extends Nodo {
     }
 
     recorrer(bool, ts) {
+
+        if ((this.tipo[0].toString().toLowerCase()) == "string") {
+            print("si entro aqui");
+            this.tipo[0] = vtipo.string;
+        }
+
         this.n3d = null;
 
         var tid = this.id;
@@ -444,7 +453,7 @@ class Asignacion extends Nodo {
             return this.niuerror("No se puede asignar un " + getTipo(n2.tipo) + " a un " + getTipo(n1.tipo));
         }
         if (n1.esarr) {
-            if (typeof n2.esarr == "undefined") {
+            if (typeof n2.esarr == "undefined" && n2.esarr) {
                 return this.niuerror("No se puede asignar un valor normal a un arreglo.");
             }
         } else {
@@ -471,15 +480,15 @@ class Asignacion extends Nodo {
         }
         st += n1.valor + "= " + n2.valor + ";\n";
 
-        
+
         if (typeof n1.var != "undefined") {
+            print(n1);
             var mivar = n1.var;
-            print(mivar); 
+            print(mivar);
             if (mivar.tvar == vddi.const) {
                 return this.niuerror("No se puede modificar la variable constante '" + mivar.nombre + "'");
             }
-
-            mivar.llamadaEn.push({ fila: this.fila, columna: this.columna });
+            mivar.usadaEn.push({ fila: this.fila, columna: this.columna });
             mivar.instanciada = true;
         }
 

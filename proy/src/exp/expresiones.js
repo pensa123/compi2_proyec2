@@ -195,6 +195,35 @@ class expresion_binaria extends Nodo {
             print(tipo);
             return { valor: tr, tipo: tipo, cadena: st };
 
+        } else if (this.operando == voperando.trigual) {
+            var st = "";
+            var vi = this.hijos[0].traducir(ts);
+            if (vi == null) {
+                return null;
+            }
+            if (isNaN(vi.valor)) {
+                addToStack.push(vi.valor);
+            }
+            var vd = this.hijos[1].traducir(ts);
+            if (isNaN(vi.valor)) {
+                addToStack.pop();
+            }
+            if (vd == null) {
+                return null;
+            }
+
+            if ((typeof vi.esarr != "undefined" && vi.esarr) || (typeof vd.esarr != "undefined" && vd.esarr)) {
+                if ((typeof vi.esarr != "undefined" && vi.esarr) && (typeof vd.esarr != "undefined" && vd.esarr)) {
+                    var ti = salto_temp.nextTemp();
+                    var td = salto_temp.nextSalto();
+
+                }
+            } else if (vd.tipo == vtipo.string && vi.tipo == vtipo.string) {
+                st += "t6 = " + vi.valor + ";\n";
+                st += "t7 = " + vd.valor + ";\n";
+                st += "call compCadenas;\n";
+                val = "t10 " + s_operando[this.operando] + " 1";
+            }
         } else if (this.operando == voperando.igualigual || this.operando == voperando.difigual) {
             var st = "";
             var vi = this.hijos[0].traducir(ts);
@@ -858,7 +887,7 @@ class llamadaFunc extends Nodo {
             if (typeof this.estaEnUnIf != "undefined") {
                 tret = tret + " == 1";
             }
-            return { cadena: st, valor: tret, tipo: nfunc.tiporetorno };
+            return { cadena: st, valor: tret, tipo: nfunc.tiporetorno, esarr: nfunc.devuelveArr };
         }
         return st;
     }
